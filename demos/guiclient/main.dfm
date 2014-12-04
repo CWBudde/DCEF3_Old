@@ -36,7 +36,6 @@ object MainForm: TMainForm
     OnDownloadUpdated = crmDownloadUpdated
     OnBeforePopup = crmBeforePopup
     OnBeforeResourceLoad = crmBeforeResourceLoad
-    ExplicitHeight = 404
   end
   object StatusBar: TStatusBar
     Left = 0
@@ -46,7 +45,7 @@ object MainForm: TMainForm
     Panels = <>
     SimplePanel = True
   end
-  object Panel1: TPanel
+  object PanelControl: TPanel
     Left = 0
     Top = 0
     Width = 864
@@ -56,35 +55,35 @@ object MainForm: TMainForm
     DesignSize = (
       864
       25)
-    object SpeedButton1: TSpeedButton
+    object SpeedButtonBack: TSpeedButton
       Left = 0
       Top = 0
       Width = 23
       Height = 22
       Action = actPrev
     end
-    object SpeedButton2: TSpeedButton
+    object SpeedButtonNext: TSpeedButton
       Left = 24
       Top = 0
       Width = 23
       Height = 22
       Action = actNext
     end
-    object SpeedButton3: TSpeedButton
+    object SpeedButtonHome: TSpeedButton
       Left = 48
       Top = 0
       Width = 23
       Height = 22
       Action = actHome
     end
-    object SpeedButton4: TSpeedButton
+    object SpeedButtonReload: TSpeedButton
       Left = 72
       Top = 0
       Width = 23
       Height = 22
       Action = actReload
     end
-    object SpeedButton5: TSpeedButton
+    object SpeedButtonLoadUrl: TSpeedButton
       Left = 841
       Top = 0
       Width = 23
@@ -188,56 +187,56 @@ object MainForm: TMainForm
   object MainMenu: TMainMenu
     Left = 624
     Top = 56
-    object File1: TMenuItem
+    object MenuItemFile: TMenuItem
       Caption = '&File'
-      object Print1: TMenuItem
+      object MenuItemPrint: TMenuItem
         Action = actPrint
       end
-      object Exit1: TMenuItem
+      object MenuItemExit: TMenuItem
         Caption = 'Exit'
         ShortCut = 16465
-        OnClick = Exit1Click
+        OnClick = MenuItemExitClick
       end
     end
-    object est1: TMenuItem
+    object MenuItemTest: TMenuItem
       Caption = '&Test'
-      object mGetsource: TMenuItem
+      object MenuItemGetSource: TMenuItem
         Action = actGetSource
       end
-      object mGetText: TMenuItem
+      object MenuItemGetText: TMenuItem
         Action = actGetText
       end
-      object ExecuteJavaScript1: TMenuItem
+      object MenuItemExecuteJavaScript: TMenuItem
         Action = actExecuteJS
       end
-      object Zoomin1: TMenuItem
+      object MenuItemZoomIn: TMenuItem
         Action = actZoomIn
       end
-      object Zoomout1: TMenuItem
+      object MenuItemZoomOut: TMenuItem
         Action = actZoomOut
       end
-      object Zoomreset1: TMenuItem
+      object MenuItemZoomReset: TMenuItem
         Action = actZoomReset
       end
-      object actFileScheme1: TMenuItem
+      object MenuItemFileScheme: TMenuItem
         Action = actFileScheme
       end
-      object VisitDOM1: TMenuItem
+      object MenuItemVisitDOM: TMenuItem
         Action = actDom
       end
-      object DevelopperTools1: TMenuItem
+      object MenuItemDevelopperTools: TMenuItem
         Action = actDevTool
       end
-      object CloseDevTools1: TMenuItem
+      object MenuItemCloseDevTools: TMenuItem
         Action = actCloseDevTools
       end
     end
-    object Help1: TMenuItem
+    object MenuItemHelp: TMenuItem
       Caption = 'Help'
-      object Documentation1: TMenuItem
+      object MenuItemDocumentation: TMenuItem
         Action = actDoc
       end
-      object Googlegroup1: TMenuItem
+      object MenuItemGoogleGroup: TMenuItem
         Action = actGroup
       end
     end
