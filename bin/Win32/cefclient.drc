@@ -352,5 +352,5 @@ BEGIN
 	System_SysConst_SOverflow,	L"Floating point overflow"
 END
 
-/* C:\dev\dcef3\demos\filescheme\ceffilescheme.res */
-/* C:\dev\dcef3\demos\cefclient\cefclient.drf */
+/* C:\data\dev\dcef3\demos\filescheme\ceffilescheme.res */
+/* C:\data\dev\dcef3\demos\cefclient\cefclient.drf */

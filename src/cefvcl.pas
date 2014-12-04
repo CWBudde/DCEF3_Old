@@ -46,6 +46,7 @@ type
     FOnLoadError: TOnLoadError;
     FOnRenderProcessTerminated: TOnRenderProcessTerminated;
     FOnPluginCrashed: TOnPluginCrashed;
+
     FOnTakeFocus: TOnTakeFocus;
     FOnSetFocus: TOnSetFocus;
     FOnGotFocus: TOnGotFocus;
@@ -55,8 +56,9 @@ type
     FOnPreKeyEvent: TOnPreKeyEvent;
     FOnKeyEvent: TOnKeyEvent;
     FOnLoadingStateChange: TOnLoadingStateChange;
+
     FOnAddressChange: TOnAddressChange;
-    FOnTitleChange: TOnTitleChange;
+    FOnTitleChange: TOnTitleChange;
     FOnTooltip: TOnTooltip;
     FOnStatusMessage: TOnStatusMessage;
     FOnConsoleMessage: TOnConsoleMessage;
@@ -65,7 +67,8 @@ type
     FOnRequestGeolocationPermission: TOnRequestGeolocationPermission;
     FOnCancelGeolocationPermission: TOnCancelGeolocationPermission;
     FOnJsdialog: TOnJsdialog;
-    FOnBeforeUnloadDialog: TOnBeforeUnloadDialog;
+
+    FOnBeforeUnloadDialog: TOnBeforeUnloadDialog;
     FOnResetDialogState: TOnResetDialogState;
     FOnDialogClosed: TOnDialogClosed;
     FOnBeforePopup: TOnBeforePopup;
@@ -73,6 +76,7 @@ type
     FOnBeforeClose: TOnBeforeClose;
     FOnRunModal: TOnRunModal;
     FOnClose: TOnClose;
+
     FOnBeforeBrowse: TOnBeforeBrowse;
     FOnBeforeResourceLoad: TOnBeforeResourceLoad;
     FOnGetResourceHandler: TOnGetResourceHandler;
@@ -81,18 +85,18 @@ type
     FOnQuotaRequest: TOnQuotaRequest;
     FOnGetCookieManager: TOnGetCookieManager;
     FOnProtocolExecution: TOnProtocolExecution;
-    FOnBeforePluginLoad: TOnBeforePluginLoad;
-    FOnFileDialog: TOnFileDialog;
-    FOnDragEnter: TOnDragEnter;
-
+    FOnBeforePluginLoad: TOnBeforePluginLoad;
+    FOnFileDialog: TOnFileDialog;
+    FOnDragEnter: TOnDragEnter;
+
     FOptions: TChromiumOptions;
-    FUserStyleSheetLocation: ustring;
     FDefaultEncoding: ustring;
     FFontOptions: TChromiumFontOptions;
 
     procedure GetSettings(var settings: TCefBrowserSettings);
-    procedure CreateBrowser;
   protected
+    function GetClientHandler: ICefClient; virtual;
+    procedure CreateBrowser; virtual;
     procedure WndProc(var Message: TMessage); override;
     procedure CreateWindowHandle(const Params: TCreateParams); override;
     procedure Loaded; override;
@@ -148,9 +152,11 @@ type
       const messageText: ustring; isReload: Boolean;
       const callback: ICefJsDialogCallback): Boolean; virtual;
     procedure doOnResetDialogState(const browser: ICefBrowser); virtual;
-    procedure doOnDialogClosed(const browser: ICefBrowser); virtual;
 
-    function doOnBeforePopup(const browser: ICefBrowser;
+    procedure doOnDialogClosed(const browser: ICefBrowser); virtual;
+
+
+    function doOnBeforePopup(const browser: ICefBrowser;
       const frame: ICefFrame; const targetUrl, targetFrameName: ustring;
       var popupFeatures: TCefPopupFeatures; var windowInfo: TCefWindowInfo;
       var client: ICefClient; var settings: TCefBrowserSettings;
@@ -173,10 +179,13 @@ type
       const callback: ICefAuthCallback): Boolean; virtual;
     function doOnQuotaRequest(const browser: ICefBrowser; const originUrl: ustring;
       newSize: Int64; const callback: ICefQuotaCallback): Boolean; virtual;
-    function doOnGetCookieManager: ICefCookieManager; virtual;
+    function doOnGetCookieManager(const browser: ICefBrowser;
+      const mainUrl: ustring): ICefCookieManager; virtual;
     procedure doOnProtocolExecution(const browser: ICefBrowser;
-      const url: ustring; out allowOsExecution: Boolean); virtual;
-    function doOnBeforePluginLoad(const browser: ICefBrowser; const url,
+
+      const url: ustring; out allowOsExecution: Boolean); virtual;
+
+    function doOnBeforePluginLoad(const browser: ICefBrowser; const url,
       policyUrl: ustring; const info: ICefWebPluginInfo): Boolean; virtual;
 
     function doOnFileDialog(const browser: ICefBrowser; mode: TCefFileDialogMode;
@@ -205,6 +214,7 @@ type
     property OnLoadError: TOnLoadError read FOnLoadError write FOnLoadError;
     property OnRenderProcessTerminated: TOnRenderProcessTerminated read FOnRenderProcessTerminated write FOnRenderProcessTerminated;
     property OnPluginCrashed: TOnPluginCrashed read FOnPluginCrashed write FOnPluginCrashed;
+
     property OnTakeFocus: TOnTakeFocus read FOnTakeFocus write FOnTakeFocus;
     property OnSetFocus: TOnSetFocus read FOnSetFocus write FOnSetFocus;
     property OnGotFocus: TOnGotFocus read FOnGotFocus write FOnGotFocus;
@@ -214,8 +224,9 @@ type
     property OnPreKeyEvent: TOnPreKeyEvent read FOnPreKeyEvent write FOnPreKeyEvent;
     property OnKeyEvent: TOnKeyEvent read FOnKeyEvent write FOnKeyEvent;
     property OnLoadingStateChange: TOnLoadingStateChange read FOnLoadingStateChange write FOnLoadingStateChange;
+
     property OnAddressChange: TOnAddressChange read FOnAddressChange write FOnAddressChange;
-    property OnTitleChange: TOnTitleChange read FOnTitleChange write FOnTitleChange;
+    property OnTitleChange: TOnTitleChange read FOnTitleChange write FOnTitleChange;
     property OnTooltip: TOnTooltip read FOnTooltip write FOnTooltip;
     property OnStatusMessage: TOnStatusMessage read FOnStatusMessage write FOnStatusMessage;
     property OnConsoleMessage: TOnConsoleMessage read FOnConsoleMessage write FOnConsoleMessage;
@@ -224,7 +235,8 @@ type
     property OnRequestGeolocationPermission: TOnRequestGeolocationPermission read FOnRequestGeolocationPermission write FOnRequestGeolocationPermission;
     property OnCancelGeolocationPermission: TOnCancelGeolocationPermission read FOnCancelGeolocationPermission write FOnCancelGeolocationPermission;
     property OnJsdialog: TOnJsdialog read FOnJsdialog write FOnJsdialog;
-    property OnBeforeUnloadDialog: TOnBeforeUnloadDialog read FOnBeforeUnloadDialog write FOnBeforeUnloadDialog;
+
+    property OnBeforeUnloadDialog: TOnBeforeUnloadDialog read FOnBeforeUnloadDialog write FOnBeforeUnloadDialog;
     property OnResetDialogState: TOnResetDialogState read FOnResetDialogState write FOnResetDialogState;
     property OnDialogClosed: TOnDialogClosed read FOnDialogClosed write FOnDialogClosed;
     property OnBeforePopup: TOnBeforePopup read FOnBeforePopup write FOnBeforePopup;
@@ -232,6 +244,7 @@ type
     property OnBeforeClose: TOnBeforeClose read FOnBeforeClose write FOnBeforeClose;
     property OnRunModal: TOnRunModal read FOnRunModal write FOnRunModal;
     property OnClose: TOnClose read FOnClose write FOnClose;
+
     property OnBeforeBrowse: TOnBeforeBrowse read FOnBeforeBrowse write FOnBeforeBrowse;
     property OnBeforeResourceLoad: TOnBeforeResourceLoad read FOnBeforeResourceLoad write FOnBeforeResourceLoad;
     property OnGetResourceHandler: TOnGetResourceHandler read FOnGetResourceHandler write FOnGetResourceHandler;
@@ -240,15 +253,16 @@ type
     property OnQuotaRequest: TOnQuotaRequest read FOnQuotaRequest write FOnQuotaRequest;
     property OnGetCookieManager: TOnGetCookieManager read FOnGetCookieManager write FOnGetCookieManager;
     property OnProtocolExecution: TOnProtocolExecution read FOnProtocolExecution write FOnProtocolExecution;
-    property OnBeforePluginLoad: TOnBeforePluginLoad read FOnBeforePluginLoad write FOnBeforePluginLoad;
-    property OnFileDialog: TOnFileDialog read FOnFileDialog write FOnFileDialog;
+
+    property OnBeforePluginLoad: TOnBeforePluginLoad read FOnBeforePluginLoad write FOnBeforePluginLoad;
+
+    property OnFileDialog: TOnFileDialog read FOnFileDialog write FOnFileDialog;
     property OnDragEnter: TOnDragEnter read FOnDragEnter write FOnDragEnter;
 
     property DefaultUrl: ustring read FDefaultUrl write FDefaultUrl;
     property Options: TChromiumOptions read FOptions write FOptions;
     property FontOptions: TChromiumFontOptions read FFontOptions;
     property DefaultEncoding: ustring read FDefaultEncoding write FDefaultEncoding;
-    property UserStyleSheetLocation: ustring read FUserStyleSheetLocation write FUserStyleSheetLocation;
     property BrowserId: Integer read FBrowserId;
     property Browser: ICefBrowser read FBrowser;
   public
@@ -256,6 +270,7 @@ type
     destructor Destroy; override;
     procedure Load(const url: ustring);
     procedure ReCreateBrowser(const url: string);
+    procedure ShowDevTools;
   end;
 
   TCustomChromiumOSR = class(TComponent, IChromiumEvents)
@@ -271,6 +286,7 @@ type
     FOnLoadError: TOnLoadError;
     FOnRenderProcessTerminated: TOnRenderProcessTerminated;
     FOnPluginCrashed: TOnPluginCrashed;
+
     FOnTakeFocus: TOnTakeFocus;
     FOnSetFocus: TOnSetFocus;
     FOnGotFocus: TOnGotFocus;
@@ -280,8 +296,9 @@ type
     FOnPreKeyEvent: TOnPreKeyEvent;
     FOnKeyEvent: TOnKeyEvent;
     FOnLoadingStateChange: TOnLoadingStateChange;
+
     FOnAddressChange: TOnAddressChange;
-    FOnTitleChange: TOnTitleChange;
+    FOnTitleChange: TOnTitleChange;
     FOnTooltip: TOnTooltip;
     FOnStatusMessage: TOnStatusMessage;
     FOnConsoleMessage: TOnConsoleMessage;
@@ -290,7 +307,8 @@ type
     FOnRequestGeolocationPermission: TOnRequestGeolocationPermission;
     FOnCancelGeolocationPermission: TOnCancelGeolocationPermission;
     FOnJsdialog: TOnJsdialog;
-    FOnBeforeUnloadDialog: TOnBeforeUnloadDialog;
+
+    FOnBeforeUnloadDialog: TOnBeforeUnloadDialog;
     FOnResetDialogState: TOnResetDialogState;
     FOnDialogClosed: TOnDialogClosed;
     FOnBeforePopup: TOnBeforePopup;
@@ -298,6 +316,7 @@ type
     FOnBeforeClose: TOnBeforeClose;
     FOnRunModal: TOnRunModal;
     FOnClose: TOnClose;
+
     FOnBeforeBrowse: TOnBeforeBrowse;
     FOnBeforeResourceLoad: TOnBeforeResourceLoad;
     FOnGetResourceHandler: TOnGetResourceHandler;
@@ -306,9 +325,12 @@ type
     FOnQuotaRequest: TOnQuotaRequest;
     FOnGetCookieManager: TOnGetCookieManager;
     FOnProtocolExecution: TOnProtocolExecution;
-    FOnBeforePluginLoad: TOnBeforePluginLoad;
-    FOnFileDialog: TOnFileDialog;
-
+
+    FOnBeforePluginLoad: TOnBeforePluginLoad;
+
+    FOnFileDialog: TOnFileDialog;
+
+
     FOnGetRootScreenRect: TOnGetRootScreenRect;
     FOnGetViewRect: TOnGetViewRect;
     FOnGetScreenPoint: TOnGetScreenPoint;
@@ -322,13 +344,14 @@ type
     FOnDragEnter: TOnDragEnter;
 
     FOptions: TChromiumOptions;
-    FUserStyleSheetLocation: ustring;
     FDefaultEncoding: ustring;
     FFontOptions: TChromiumFontOptions;
+    FTransparentPainting: Boolean;
 
     procedure GetSettings(var settings: TCefBrowserSettings);
-    procedure CreateBrowser;
   protected
+    procedure CreateBrowser; virtual;
+    function GetClientHandler: ICefClient; virtual;
     procedure Loaded; override;
 
     function doOnProcessMessageReceived(const browser: ICefBrowser;
@@ -381,7 +404,8 @@ type
       const messageText: ustring; isReload: Boolean;
       const callback: ICefJsDialogCallback): Boolean; virtual;
     procedure doOnResetDialogState(const browser: ICefBrowser); virtual;
-    procedure doOnDialogClosed(const browser: ICefBrowser); virtual;
+
+    procedure doOnDialogClosed(const browser: ICefBrowser); virtual;
 
     function doOnBeforePopup(const browser: ICefBrowser;
       const frame: ICefFrame; const targetUrl, targetFrameName: ustring;
@@ -406,10 +430,13 @@ type
       const callback: ICefAuthCallback): Boolean; virtual;
     function doOnQuotaRequest(const browser: ICefBrowser; const originUrl: ustring;
       newSize: Int64; const callback: ICefQuotaCallback): Boolean; virtual;
-    function doOnGetCookieManager: ICefCookieManager; virtual;
+    function doOnGetCookieManager(const browser: ICefBrowser;
+      const mainUrl: ustring): ICefCookieManager; virtual;
     procedure doOnProtocolExecution(const browser: ICefBrowser;
-      const url: ustring; out allowOsExecution: Boolean); virtual;
-    function doOnBeforePluginLoad(const browser: ICefBrowser; const url,
+
+      const url: ustring; out allowOsExecution: Boolean); virtual;
+
+    function doOnBeforePluginLoad(const browser: ICefBrowser; const url,
       policyUrl: ustring; const info: ICefWebPluginInfo): Boolean; virtual;
 
     function doOnFileDialog(const browser: ICefBrowser; mode: TCefFileDialogMode;
@@ -438,6 +465,7 @@ type
     property OnLoadError: TOnLoadError read FOnLoadError write FOnLoadError;
     property OnRenderProcessTerminated: TOnRenderProcessTerminated read FOnRenderProcessTerminated write FOnRenderProcessTerminated;
     property OnPluginCrashed: TOnPluginCrashed read FOnPluginCrashed write FOnPluginCrashed;
+
     property OnTakeFocus: TOnTakeFocus read FOnTakeFocus write FOnTakeFocus;
     property OnSetFocus: TOnSetFocus read FOnSetFocus write FOnSetFocus;
     property OnGotFocus: TOnGotFocus read FOnGotFocus write FOnGotFocus;
@@ -447,8 +475,9 @@ type
     property OnPreKeyEvent: TOnPreKeyEvent read FOnPreKeyEvent write FOnPreKeyEvent;
     property OnKeyEvent: TOnKeyEvent read FOnKeyEvent write FOnKeyEvent;
     property OnLoadingStateChange: TOnLoadingStateChange read FOnLoadingStateChange write FOnLoadingStateChange;
+
     property OnAddressChange: TOnAddressChange read FOnAddressChange write FOnAddressChange;
-    property OnTitleChange: TOnTitleChange read FOnTitleChange write FOnTitleChange;
+    property OnTitleChange: TOnTitleChange read FOnTitleChange write FOnTitleChange;
     property OnTooltip: TOnTooltip read FOnTooltip write FOnTooltip;
     property OnStatusMessage: TOnStatusMessage read FOnStatusMessage write FOnStatusMessage;
     property OnConsoleMessage: TOnConsoleMessage read FOnConsoleMessage write FOnConsoleMessage;
@@ -457,7 +486,8 @@ type
     property OnRequestGeolocationPermission: TOnRequestGeolocationPermission read FOnRequestGeolocationPermission write FOnRequestGeolocationPermission;
     property OnCancelGeolocationPermission: TOnCancelGeolocationPermission read FOnCancelGeolocationPermission write FOnCancelGeolocationPermission;
     property OnJsdialog: TOnJsdialog read FOnJsdialog write FOnJsdialog;
-    property OnBeforeUnloadDialog: TOnBeforeUnloadDialog read FOnBeforeUnloadDialog write FOnBeforeUnloadDialog;
+
+    property OnBeforeUnloadDialog: TOnBeforeUnloadDialog read FOnBeforeUnloadDialog write FOnBeforeUnloadDialog;
     property OnResetDialogState: TOnResetDialogState read FOnResetDialogState write FOnResetDialogState;
     property OnDialogClosed: TOnDialogClosed read FOnDialogClosed write FOnDialogClosed;
     property OnBeforePopup: TOnBeforePopup read FOnBeforePopup write FOnBeforePopup;
@@ -465,6 +495,7 @@ type
     property OnBeforeClose: TOnBeforeClose read FOnBeforeClose write FOnBeforeClose;
     property OnRunModal: TOnRunModal read FOnRunModal write FOnRunModal;
     property OnClose: TOnClose read FOnClose write FOnClose;
+
     property OnBeforeBrowse: TOnBeforeBrowse read FOnBeforeBrowse write FOnBeforeBrowse;
     property OnBeforeResourceLoad: TOnBeforeResourceLoad read FOnBeforeResourceLoad write FOnBeforeResourceLoad;
     property OnGetResourceHandler: TOnGetResourceHandler read FOnGetResourceHandler write FOnGetResourceHandler;
@@ -473,8 +504,10 @@ type
     property OnQuotaRequest: TOnQuotaRequest read FOnQuotaRequest write FOnQuotaRequest;
     property OnGetCookieManager: TOnGetCookieManager read FOnGetCookieManager write FOnGetCookieManager;
     property OnProtocolExecution: TOnProtocolExecution read FOnProtocolExecution write FOnProtocolExecution;
-    property OnBeforePluginLoad: TOnBeforePluginLoad read FOnBeforePluginLoad write FOnBeforePluginLoad;
-    property OnFileDialog: TOnFileDialog read FOnFileDialog write FOnFileDialog;
+
+    property OnBeforePluginLoad: TOnBeforePluginLoad read FOnBeforePluginLoad write FOnBeforePluginLoad;
+
+    property OnFileDialog: TOnFileDialog read FOnFileDialog write FOnFileDialog;
     property OnGetRootScreenRect: TOnGetRootScreenRect read FOnGetRootScreenRect write FOnGetRootScreenRect;
     property OnGetViewRect: TOnGetViewRect read FOnGetViewRect write FOnGetViewRect;
     property OnGetScreenPoint: TOnGetScreenPoint read FOnGetScreenPoint write FOnGetScreenPoint;
@@ -490,9 +523,9 @@ type
     property Options: TChromiumOptions read FOptions write FOptions;
     property FontOptions: TChromiumFontOptions read FFontOptions;
     property DefaultEncoding: ustring read FDefaultEncoding write FDefaultEncoding;
-    property UserStyleSheetLocation: ustring read FUserStyleSheetLocation write FUserStyleSheetLocation;
     property BrowserId: Integer read FBrowserId;
     property Browser: ICefBrowser read FBrowser;
+    property TransparentPainting: Boolean read FTransparentPainting write FTransparentPainting default False;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -520,6 +553,7 @@ type
     property OnLoadError;
     property OnRenderProcessTerminated;
     property OnPluginCrashed;
+
     property OnTakeFocus;
     property OnSetFocus;
     property OnGotFocus;
@@ -529,8 +563,9 @@ type
     property OnPreKeyEvent;
     property OnKeyEvent;
     property OnLoadingStateChange;
+
     property OnAddressChange;
-    property OnTitleChange;
+    property OnTitleChange;
     property OnTooltip;
     property OnStatusMessage;
     property OnConsoleMessage;
@@ -539,7 +574,8 @@ type
     property OnRequestGeolocationPermission;
     property OnCancelGeolocationPermission;
     property OnJsdialog;
-    property OnBeforeUnloadDialog;
+
+    property OnBeforeUnloadDialog;
     property OnResetDialogState;
     property OnDialogClosed;
     property OnBeforePopup;
@@ -547,6 +583,7 @@ type
     property OnBeforeClose;
     property OnRunModal;
     property OnClose;
+
     property OnBeforeBrowse;
     property OnBeforeResourceLoad;
     property OnGetResourceHandler;
@@ -554,17 +591,17 @@ type
     property OnGetAuthCredentials;
     property OnGetCookieManager;
     property OnProtocolExecution;
-    property OnFileDialog;
-    property OnDragEnter;
-
+    property OnFileDialog;
+    property OnDragEnter;
+
     property Options;
     property FontOptions;
     property DefaultEncoding;
-    property UserStyleSheetLocation;
   end;
 
-  TChromiumOSR = class(TCustomChromiumOSR)
-  public
+
+  TChromiumOSR = class(TCustomChromiumOSR)
+  public
     property BrowserId;
     property Browser;
   published
@@ -576,6 +613,7 @@ type
     property OnLoadError;
     property OnRenderProcessTerminated;
     property OnPluginCrashed;
+
     property OnTakeFocus;
     property OnSetFocus;
     property OnGotFocus;
@@ -585,8 +623,9 @@ type
     property OnPreKeyEvent;
     property OnKeyEvent;
     property OnLoadingStateChange;
+
     property OnAddressChange;
-    property OnTitleChange;
+    property OnTitleChange;
     property OnTooltip;
     property OnStatusMessage;
     property OnConsoleMessage;
@@ -595,7 +634,8 @@ type
     property OnRequestGeolocationPermission;
     property OnCancelGeolocationPermission;
     property OnJsdialog;
-    property OnBeforeUnloadDialog;
+
+    property OnBeforeUnloadDialog;
     property OnResetDialogState;
     property OnDialogClosed;
     property OnBeforePopup;
@@ -603,6 +643,7 @@ type
     property OnBeforeClose;
     property OnRunModal;
     property OnClose;
+
     property OnBeforeBrowse;
     property OnBeforeResourceLoad;
     property OnGetResourceHandler;
@@ -610,8 +651,10 @@ type
     property OnGetAuthCredentials;
     property OnGetCookieManager;
     property OnProtocolExecution;
-    property OnFileDialog;
-    property OnGetRootScreenRect;
+
+    property OnFileDialog;
+
+    property OnGetRootScreenRect;
     property OnGetViewRect;
     property OnGetScreenPoint;
     property OnPopupShow;
@@ -624,10 +667,10 @@ type
     property Options;
     property FontOptions;
     property DefaultEncoding;
-    property UserStyleSheetLocation;
   end;
 
-implementation
+
+implementation
 {$IFNDEF CEF_MULTI_THREADED_MESSAGE_LOOP}
   uses
 {$IFDEF DELPHI16_UP}
@@ -697,12 +740,11 @@ begin
   FDefaultUrl := 'about:blank';
 
   if not (csDesigning in ComponentState) then
-    FHandler := TVCLClientHandler.Create(Self, False);
+    FHandler := GetClientHandler;
 
   FOptions := TChromiumOptions.Create;
   FFontOptions := TChromiumFontOptions.Create;
 
-  FUserStyleSheetLocation := '';
   FDefaultEncoding := '';
   FBrowserId := 0;
   FBrowser := nil;
@@ -728,12 +770,9 @@ begin
     settings.size := SizeOf(TCefBrowserSettings);
     GetSettings(settings);
 {$IFDEF CEF_MULTI_THREADED_MESSAGE_LOOP}
-    CefBrowserHostCreate(@info, FHandler, FDefaultUrl, @settings,
-      TCefRequestContextRef.CreateContext((FHandler as ICefClientHandler).GetRequestContextHandler));
+    CefBrowserHostCreate(@info, FHandler, FDefaultUrl, @settings, nil);
 {$ELSE}
-    CefLoadLibDefault;
-    FBrowser := CefBrowserHostCreateSync(@info, FHandler, '', @settings,
-      TCefRequestContextRef.CreateContext((FHandler as ICefClientHandler).GetRequestContextHandler));
+    FBrowser := CefBrowserHostCreateSync(@info, FHandler, '', @settings, nil);
     FBrowserId := FBrowser.Identifier;
 {$ENDIF}
   end;
@@ -744,6 +783,7 @@ begin
   inherited;
   CreateBrowser;
 end;
+
 
 destructor TCustomChromium.Destroy;
 begin
@@ -761,6 +801,11 @@ begin
   inherited;
 end;
 
+function TCustomChromium.GetClientHandler: ICefClient;
+begin
+  Result := TVCLClientHandler.Create(Self, False);
+end;
+
 procedure TCustomChromium.GetSettings(var settings: TCefBrowserSettings);
 begin
   Assert(settings.size >= SizeOf(settings));
@@ -776,7 +821,6 @@ begin
   settings.minimum_logical_font_size := FFontOptions.MinimumLogicalFontSize;
   settings.remote_fonts := FFontOptions.RemoteFonts;
   settings.default_encoding := CefString(DefaultEncoding);
-  settings.user_style_sheet_location := CefString(UserStyleSheetLocation);
 
   settings.javascript := FOptions.Javascript;
   settings.javascript_open_windows := FOptions.JavascriptOpenWindows;
@@ -793,12 +837,12 @@ begin
   settings.image_shrink_standalone_to_fit := FOptions.ImageShrinkStandaloneToFit;
   settings.text_area_resize := FOptions.TextAreaResize;
   settings.tab_to_links := FOptions.TabToLinks;
-  settings.author_and_user_styles := FOptions.AuthorAndUserStyles;
   settings.local_storage := FOptions.LocalStorage;
   settings.databases := FOptions.Databases;
   settings.application_cache := FOptions.ApplicationCache;
   settings.webgl := FOptions.Webgl;
   settings.accelerated_compositing := FOptions.AcceleratedCompositing;
+  settings.background_color := FOptions.BackgroundColor;
 end;
 
 procedure TCustomChromium.Load(const url: ustring);
@@ -860,6 +904,25 @@ begin
   end;
 end;
 
+procedure TCustomChromium.ShowDevTools;
+var
+  info: TCefWindowInfo;
+  setting: TCefBrowserSettings;
+begin
+  FillChar(info, SizeOf(info), 0);
+  info.style := WS_OVERLAPPEDWINDOW or WS_CLIPCHILDREN or WS_CLIPSIBLINGS or WS_VISIBLE;
+  info.parent_window := FBrowser.Host.WindowHandle;
+  info.x := Integer(CW_USEDEFAULT);
+  info.y := Integer(CW_USEDEFAULT);
+  info.width := Integer(CW_USEDEFAULT);
+  info.height := Integer(CW_USEDEFAULT);
+  info.window_name := CefString('DevTools');
+
+  FillChar(setting, SizeOf(setting), 0);
+  setting.size := SizeOf(setting);
+  FBrowser.Host.ShowDevTools(@info, FHandler, @setting);
+end;
+
 procedure TCustomChromium.WndProc(var Message: TMessage);
 begin
   case Message.Msg of
@@ -903,6 +966,15 @@ begin
     FOnAfterCreated(Self, browser);
 end;
 
+function TCustomChromium.doOnBeforeBrowse(const browser: ICefBrowser;
+  const frame: ICefFrame; const request: ICefRequest;
+  isRedirect: Boolean): Boolean;
+begin
+  Result := False;
+  if Assigned(FOnBeforeBrowse) then
+    FOnBeforeBrowse(Self, browser, frame, request, isRedirect, Result);
+end;
+
 procedure TCustomChromium.doOnBeforeClose(const browser: ICefBrowser);
 begin
   if Assigned(FOnBeforeClose) then
@@ -943,14 +1015,6 @@ begin
   if Assigned(FOnBeforePopup) then
     FOnBeforePopup(Self, browser, frame, targetUrl, targetFrameName, popupFeatures,
       windowInfo, client, settings, noJavascriptAccess, Result);
-end;
-
-function TCustomChromium.doOnBeforeBrowse(const browser: ICefBrowser;
-  const frame: ICefFrame; const request: ICefRequest; isRedirect: Boolean): Boolean;
-begin
-  Result := False;
-  if Assigned(FOnBeforeBrowse) then
-    FOnBeforeBrowse(Self, browser, frame, request, isRedirect, Result);
 end;
 
 function TCustomChromium.doOnBeforeResourceLoad(const browser: ICefBrowser;
@@ -1049,10 +1113,11 @@ begin
       port, realm, scheme, callback, Result);
 end;
 
-function TCustomChromium.doOnGetCookieManager: ICefCookieManager;
+function TCustomChromium.doOnGetCookieManager(const browser: ICefBrowser;
+  const mainUrl: ustring): ICefCookieManager;
 begin
   if Assigned(FOnGetCookieManager) then
-    FOnGetCookieManager(Self, Result) else
+    FOnGetCookieManager(Self, browser, mainUrl, Result) else
     Result := nil;
 end;
 
@@ -1283,15 +1348,15 @@ end;
 constructor TCustomChromiumOSR.Create(AOwner: TComponent);
 begin
   inherited;
+  FTransparentPainting := False;
   FDefaultUrl := 'about:blank';
 
   if not (csDesigning in ComponentState) then
-    FHandler := TVCLClientHandler.Create(Self, True);
+    FHandler := GetClientHandler;
 
   FOptions := TChromiumOptions.Create;
   FFontOptions := TChromiumFontOptions.Create;
 
-  FUserStyleSheetLocation := '';
   FDefaultEncoding := '';
   FBrowserId := 0;
   FBrowser := nil;
@@ -1306,13 +1371,14 @@ begin
   begin
     FillChar(info, SizeOf(info), 0);
     info.window_rendering_disabled := True;
+    info.transparent_painting := FTransparentPainting;
     FillChar(settings, SizeOf(TCefBrowserSettings), 0);
     settings.size := SizeOf(TCefBrowserSettings);
     GetSettings(settings);
 {$IFDEF CEF_MULTI_THREADED_MESSAGE_LOOP}
-    CefBrowserHostCreate(@info, FHandler, FDefaultUrl, @settings);
+    CefBrowserHostCreate(@info, FHandler, FDefaultUrl, @settings, nil);
 {$ELSE}
-    FBrowser := CefBrowserHostCreateSync(@info, FHandler, '', @settings);
+    FBrowser := CefBrowserHostCreateSync(@info, FHandler, '', @settings, nil);
     FBrowserId := FBrowser.Identifier;
 {$ENDIF}
   end;
@@ -1331,6 +1397,11 @@ begin
   inherited;
 end;
 
+function TCustomChromiumOSR.GetClientHandler: ICefClient;
+begin
+  Result := TVCLClientHandler.Create(Self, True);
+end;
+
 procedure TCustomChromiumOSR.GetSettings(var settings: TCefBrowserSettings);
 begin
   Assert(settings.size >= SizeOf(settings));
@@ -1346,7 +1417,6 @@ begin
   settings.minimum_logical_font_size := FFontOptions.MinimumLogicalFontSize;
   settings.remote_fonts := FFontOptions.RemoteFonts;
   settings.default_encoding := CefString(DefaultEncoding);
-  settings.user_style_sheet_location := CefString(UserStyleSheetLocation);
 
   settings.javascript := FOptions.Javascript;
   settings.javascript_open_windows := FOptions.JavascriptOpenWindows;
@@ -1363,12 +1433,12 @@ begin
   settings.image_shrink_standalone_to_fit := FOptions.ImageShrinkStandaloneToFit;
   settings.text_area_resize := FOptions.TextAreaResize;
   settings.tab_to_links := FOptions.TabToLinks;
-  settings.author_and_user_styles := FOptions.AuthorAndUserStyles;
   settings.local_storage := FOptions.LocalStorage;
   settings.databases := FOptions.Databases;
   settings.application_cache := FOptions.ApplicationCache;
   settings.webgl := FOptions.Webgl;
   settings.accelerated_compositing := FOptions.AcceleratedCompositing;
+  settings.background_color := FOptions.BackgroundColor;
 end;
 
 procedure TCustomChromiumOSR.Load(const url: ustring);
@@ -1425,6 +1495,15 @@ begin
     FOnAfterCreated(Self, browser);
 end;
 
+function TCustomChromiumOSR.doOnBeforeBrowse(const browser: ICefBrowser;
+  const frame: ICefFrame; const request: ICefRequest;
+  isRedirect: Boolean): Boolean;
+begin
+  Result := False;
+  if Assigned(FOnBeforeBrowse) then
+    FOnBeforeBrowse(Self, browser, frame, request, isRedirect, Result);
+end;
+
 procedure TCustomChromiumOSR.doOnBeforeClose(const browser: ICefBrowser);
 begin
   if Assigned(FOnBeforeClose) then
@@ -1465,14 +1544,6 @@ begin
   if Assigned(FOnBeforePopup) then
     FOnBeforePopup(Self, browser, frame, targetUrl, targetFrameName, popupFeatures,
       windowInfo, client, settings, noJavascriptAccess, Result);
-end;
-
-function TCustomChromiumOSR.doOnBeforeBrowse(const browser: ICefBrowser;
-  const frame: ICefFrame; const request: ICefRequest; isRedirect: Boolean): Boolean;
-begin
-  Result := False;
-  if Assigned(FOnBeforeBrowse) then
-    FOnBeforeBrowse(Self, browser, frame, request, isRedirect, Result);
 end;
 
 function TCustomChromiumOSR.doOnBeforeResourceLoad(const browser: ICefBrowser;
@@ -1572,10 +1643,11 @@ begin
       port, realm, scheme, callback, Result);
 end;
 
-function TCustomChromiumOSR.doOnGetCookieManager: ICefCookieManager;
+function TCustomChromiumOSR.doOnGetCookieManager(const browser: ICefBrowser;
+  const mainUrl: ustring): ICefCookieManager;
 begin
   if Assigned(FOnGetCookieManager) then
-    FOnGetCookieManager(Self, Result) else
+    FOnGetCookieManager(Self, browser, mainUrl, Result) else
     Result := nil;
 end;
 

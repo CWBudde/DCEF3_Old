@@ -104,7 +104,8 @@ type
   TOnQuotaRequest = procedure(Sender: TObject; const browser: ICefBrowser;
     const originUrl: ustring; newSize: Int64; const callback: ICefQuotaCallback;
     out Result: Boolean) of object;
-  TOnGetCookieManager = procedure(Sender: TObject; out Result: ICefCookieManager) of object;
+  TOnGetCookieManager = procedure(Sender: TObject; const browser: ICefBrowser;
+    const mainUrl: ustring; out Result: ICefCookieManager) of object;
   TOnProtocolExecution = procedure(Sender: TObject; const browser: ICefBrowser;
     const url: ustring; out allowOsExecution: Boolean) of object;
   TOnBeforePluginLoad = procedure(Sender: TObject; const browser: ICefBrowser;
@@ -154,12 +155,12 @@ type
     FImageShrinkStandaloneToFit: TCefState;
     FTextAreaResize: TCefState;
     FTabToLinks: TCefState;
-    FAuthorAndUserStyles: TCefState;
     FLocalStorage: TCefState;
     FDatabases: TCefState;
     FApplicationCache: TCefState;
     FWebgl: TCefState;
     FAcceleratedCompositing: TCefState;
+    FBackgroundColor: TCefColor;
   published
     property Javascript: TCefState read FJavascript write FJavascript default STATE_DEFAULT;
     property JavascriptOpenWindows: TCefState read FJavascriptOpenWindows write FJavascriptOpenWindows default STATE_DEFAULT;
@@ -176,12 +177,12 @@ type
     property ImageShrinkStandaloneToFit: TCefState read FImageShrinkStandaloneToFit write FImageShrinkStandaloneToFit default STATE_DEFAULT;
     property TextAreaResize: TCefState read FTextAreaResize write FTextAreaResize default STATE_DEFAULT;
     property TabToLinks: TCefState read FTabToLinks write FTabToLinks default STATE_DEFAULT;
-    property AuthorAndUserStyles: TCefState read FAuthorAndUserStyles write FAuthorAndUserStyles default STATE_DEFAULT;
     property LocalStorage: TCefState read FLocalStorage write FLocalStorage default STATE_DEFAULT;
     property Databases: TCefState read FDatabases write FDatabases default STATE_DEFAULT;
     property ApplicationCache: TCefState read FApplicationCache write FApplicationCache default STATE_DEFAULT;
     property Webgl: TCefState read FWebgl write FWebgl default STATE_DEFAULT;
     property AcceleratedCompositing: TCefState read FAcceleratedCompositing write FAcceleratedCompositing default STATE_DEFAULT;
+    property BackgroundColor: TCefColor read FBackgroundColor write FBackgroundColor default 0;
   end;
 
   TChromiumFontOptions = class(TPersistent)
@@ -224,8 +225,6 @@ type
     procedure doOnLoadEnd(const browser: ICefBrowser; const frame: ICefFrame; httpStatusCode: Integer);
     procedure doOnLoadError(const browser: ICefBrowser; const frame: ICefFrame; errorCode: Integer;
       const errorText, failedUrl: ustring);
-    procedure doOnRenderProcessTerminated(const browser: ICefBrowser; status: TCefTerminationStatus);
-    procedure doOnPluginCrashed(const browser: ICefBrowser; const pluginPath: ustring);
 
     procedure doOnTakeFocus(const browser: ICefBrowser; next: Boolean);
     function doOnSetFocus(const browser: ICefBrowser; source: TCefFocusSource): Boolean;
@@ -291,10 +290,12 @@ type
       const callback: ICefAuthCallback): Boolean;
     function doOnQuotaRequest(const browser: ICefBrowser; const originUrl: ustring;
       newSize: Int64; const callback: ICefQuotaCallback): Boolean;
-    function doOnGetCookieManager: ICefCookieManager;
+    function doOnGetCookieManager(const browser: ICefBrowser; const mainUrl: ustring): ICefCookieManager;
     procedure doOnProtocolExecution(const browser: ICefBrowser; const url: ustring; out allowOsExecution: Boolean);
     function doOnBeforePluginLoad(const browser: ICefBrowser; const url, policyUrl: ustring;
       const info: ICefWebPluginInfo): Boolean;
+    procedure doOnRenderProcessTerminated(const browser: ICefBrowser; status: TCefTerminationStatus);
+    procedure doOnPluginCrashed(const browser: ICefBrowser; const pluginPath: ustring);
 
     function doOnFileDialog(const browser: ICefBrowser; mode: TCefFileDialogMode;
       const title, defaultFileName: ustring; acceptTypes: TStrings;
@@ -320,7 +321,6 @@ type
   ICefClientHandler = interface
     ['{E76F6888-D9C3-4FCE-9C23-E89659820A36}']
     procedure Disconnect;
-    function GetRequestContextHandler: ICefRequestContextHandler;
   end;
 
   TCustomClientHandler = class(TCefClientOwn, ICefClientHandler)
@@ -339,7 +339,6 @@ type
     FRenderHandler: ICefRenderHandler;
     FRequestHandler: ICefRequestHandler;
     FDragHandler: ICefDragHandler;
-    FRequestContextHandler: ICefRequestContextHandler;
   protected
     function GetContextMenuHandler: ICefContextMenuHandler; override;
     function GetDialogHandler: ICefDialogHandler; override;
@@ -353,9 +352,9 @@ type
     function GetRenderHandler: ICefRenderHandler; override;
     function GetLoadHandler: ICefLoadHandler; override;
     function GetRequestHandler: ICefRequestHandler; override;
-    function GetRequestContextHandler: ICefRequestContextHandler;
     function OnProcessMessageReceived(const browser: ICefBrowser;
       sourceProcess: TCefProcessId; const message: ICefProcessMessage): Boolean; override;
+
     procedure Disconnect;
   public
     constructor Create(const events: IChromiumEvents; renderer: Boolean); reintroduce; virtual;
@@ -367,8 +366,7 @@ type
   private
     FEvent: IChromiumEvents;
   protected
-    procedure OnLoadingStateChange(const browser: ICefBrowser; isLoading,
-      canGoBack, canGoForward: Boolean); override;
+    procedure OnLoadingStateChange(const browser: ICefBrowser; isLoading, canGoBack, canGoForward: Boolean); override;
     procedure OnLoadStart(const browser: ICefBrowser; const frame: ICefFrame); override;
     procedure OnLoadEnd(const browser: ICefBrowser; const frame: ICefFrame; httpStatusCode: Integer); override;
     procedure OnLoadError(const browser: ICefBrowser; const frame: ICefFrame; errorCode: Integer;
@@ -511,6 +509,7 @@ type
       const callback: ICefAuthCallback): Boolean; override;
     function OnQuotaRequest(const browser: ICefBrowser; const originUrl: ustring;
       newSize: Int64; const callback: ICefQuotaCallback): Boolean; override;
+    function GetCookieManager(const browser: ICefBrowser; const mainUrl: ustring): ICefCookieManager; override;
     procedure OnProtocolExecution(const browser: ICefBrowser; const url: ustring; out allowOsExecution: Boolean); override;
     function OnBeforePluginLoad(const browser: ICefBrowser; const url: ustring;
       const policyUrl: ustring; const info: ICefWebPluginInfo): Boolean; override;
@@ -551,15 +550,6 @@ type
     constructor Create(const events: IChromiumEvents); reintroduce; virtual;
   end;
 
-  TCustomRequestContextHandler = class(TCefRequestContextHandlerOwn)
-  private
-    FEvent: IChromiumEvents;
-  protected
-    function GetCookieManager: ICefCookieManager; override;
-  public
-    constructor Create(const events: IChromiumEvents); reintroduce; virtual;
-  end;
-
 implementation
 
 { TChromiumFontOptions }
@@ -596,7 +586,6 @@ begin
   FJsDialogHandler := TCustomJsDialogHandler.Create(events);
   FLifeSpanHandler := TCustomLifeSpanHandler.Create(events);
   FRequestHandler := TCustomRequestHandler.Create(events);
-  FRequestContextHandler := TCustomRequestContextHandler.Create(events);
   if renderer then
     FRenderHandler := TCustomRenderHandler.Create(events) else
     FRenderHandler := nil;
@@ -619,7 +608,6 @@ begin
   FRequestHandler := nil;
   FRenderHandler := nil;
   FDragHandler := nil;
-  FRequestContextHandler := nil;
 end;
 
 function TCustomClientHandler.GetContextMenuHandler: ICefContextMenuHandler;
@@ -677,11 +665,6 @@ begin
   Result := FRenderHandler;
 end;
 
-function TCustomClientHandler.GetRequestContextHandler: ICefRequestContextHandler;
-begin
-  Result := FRequestContextHandler;
-end;
-
 function TCustomClientHandler.GetRequestHandler: ICefRequestHandler;
 begin
   Result := FRequestHandler;
@@ -691,7 +674,9 @@ function TCustomClientHandler.OnProcessMessageReceived(
   const browser: ICefBrowser; sourceProcess: TCefProcessId;
   const message: ICefProcessMessage): Boolean;
 begin
-  Result := FEvents.doOnProcessMessageReceived(browser, sourceProcess, message);
+  if Assigned(FEvents) then
+    Result := FEvents.doOnProcessMessageReceived(browser, sourceProcess, message) else
+    Result := False;
 end;
 
 { TCustomLoadHandler }
@@ -973,6 +958,12 @@ begin
     realm, scheme, callback);
 end;
 
+function TCustomRequestHandler.GetCookieManager(const browser: ICefBrowser;
+  const mainUrl: ustring): ICefCookieManager;
+begin
+  Result := FEvent.doOnGetCookieManager(browser, mainUrl);
+end;
+
 function TCustomRequestHandler.GetResourceHandler(const browser: ICefBrowser;
   const frame: ICefFrame; const request: ICefRequest): ICefResourceHandler;
 begin
@@ -1120,19 +1111,6 @@ function TCustomDragHandler.OnDragEnter(const browser: ICefBrowser;
   const dragData: ICefDragData; mask: TCefDragOperations): Boolean;
 begin
   Result := FEvent.doOnDragEnter(browser, dragData, mask);
-end;
-
-{ TCustomRequestContextHandler }
-
-constructor TCustomRequestContextHandler.Create(const events: IChromiumEvents);
-begin
-  inherited Create;
-  FEvent := events;
-end;
-
-function TCustomRequestContextHandler.GetCookieManager: ICefCookieManager;
-begin
-  Result := FEvent.doOnGetCookieManager()
 end;
 
 end.
