@@ -1,115 +1,124 @@
 unit main;
 
 interface
-
 {$I cef.inc}
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, ComCtrls, Dialogs,
-  Forms, StdCtrls, Buttons, ActnList, Menus, ExtCtrls, XPMan, ceflib, cefvcl;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, ceflib, cefvcl, Buttons, ActnList, Menus, ComCtrls,
+  ExtCtrls, XPMan, Registry, ShellApi, SyncObjs;
 
 type
   TMainForm = class(TForm)
-    actCloseDevTools: TAction;
-    actDevTool: TAction;
-    actDoc: TAction;
-    actDom: TAction;
-    actExecuteJS: TAction;
-    actFileScheme: TAction;
+    crm: TChromium;
+    DevTools: TChromiumDevTools;
+    StatusBar: TStatusBar;
+    ActionList: TActionList;
+    actPrev: TAction;
+    actNext: TAction;
+    actHome: TAction;
+    actReload: TAction;
+    actGoTo: TAction;
+    MainMenu: TMainMenu;
+    File1: TMenuItem;
+    est1: TMenuItem;
+    mGetsource: TMenuItem;
+    mGetText: TMenuItem;
     actGetSource: TAction;
     actGetText: TAction;
-    actGoTo: TAction;
-    actGroup: TAction;
-    actHome: TAction;
-    ActionList: TActionList;
-    actNext: TAction;
-    actPrev: TAction;
-    actPrint: TAction;
-    actReload: TAction;
     actZoomIn: TAction;
     actZoomOut: TAction;
     actZoomReset: TAction;
-    crm: TChromium;
-    edAddress: TEdit;
-    MainMenu: TMainMenu;
-    MenuItemCloseDevTools: TMenuItem;
-    MenuItemDevelopperTools: TMenuItem;
-    MenuItemDocumentation: TMenuItem;
-    MenuItemExecuteJavaScript: TMenuItem;
-    MenuItemExit: TMenuItem;
-    MenuItemFile: TMenuItem;
-    MenuItemFileScheme: TMenuItem;
-    MenuItemGetSource: TMenuItem;
-    MenuItemGetText: TMenuItem;
-    MenuItemGoogleGroup: TMenuItem;
-    MenuItemHelp: TMenuItem;
-    MenuItemPrint: TMenuItem;
-    MenuItemTest: TMenuItem;
-    MenuItemVisitDOM: TMenuItem;
-    MenuItemZoomIn: TMenuItem;
-    MenuItemZoomOut: TMenuItem;
-    MenuItemZoomReset: TMenuItem;
-    PanelControl: TPanel;
+    Zoomin1: TMenuItem;
+    Zoomout1: TMenuItem;
+    Zoomreset1: TMenuItem;
+    actExecuteJS: TAction;
+    ExecuteJavaScript1: TMenuItem;
+    Exit1: TMenuItem;
+    Print1: TMenuItem;
+    actFileScheme1: TMenuItem;
+    actDom: TAction;
+    VisitDOM1: TMenuItem;
     SaveDialog: TSaveDialog;
-    SpeedButtonBack: TSpeedButton;
-    SpeedButtonHome: TSpeedButton;
-    SpeedButtonLoadUrl: TSpeedButton;
-    SpeedButtonNext: TSpeedButton;
-    SpeedButtonReload: TSpeedButton;
-    StatusBar: TStatusBar;
-    procedure FormCreate(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure actCloseDevToolsExecute(Sender: TObject);
-    procedure actDevToolExecute(Sender: TObject);
-    procedure actDocExecute(Sender: TObject);
-    procedure actDomExecute(Sender: TObject);
-    procedure actExecuteJSExecute(Sender: TObject);
-    procedure actFileSchemeExecute(Sender: TObject);
-    procedure actGetSourceExecute(Sender: TObject);
-    procedure actGetTextExecute(Sender: TObject);
-    procedure actGoToExecute(Sender: TObject);
-    procedure actGroupExecute(Sender: TObject);
-    procedure actHomeExecute(Sender: TObject);
-    procedure actHomeUpdate(Sender: TObject);
-    procedure actNextExecute(Sender: TObject);
-    procedure actNextUpdate(Sender: TObject);
+    actDevTool: TAction;
+    DevelopperTools1: TMenuItem;
+    Panel1: TPanel;
+    SpeedButton1: TSpeedButton;
+    SpeedButton2: TSpeedButton;
+    SpeedButton3: TSpeedButton;
+    SpeedButton4: TSpeedButton;
+    edAddress: TEdit;
+    SpeedButton5: TSpeedButton;
+    actDoc: TAction;
+    Help1: TMenuItem;
+    Documentation1: TMenuItem;
+    actGroup: TAction;
+    Googlegroup1: TMenuItem;
+    actFileScheme: TAction;
+    actPrint: TAction;
+    Splitter: TSplitter;
+    procedure edAddressKeyPress(Sender: TObject; var Key: Char);
     procedure actPrevExecute(Sender: TObject);
-    procedure actPrevUpdate(Sender: TObject);
-    procedure actPrintExecute(Sender: TObject);
+    procedure actNextExecute(Sender: TObject);
+    procedure actHomeExecute(Sender: TObject);
     procedure actReloadExecute(Sender: TObject);
     procedure actReloadUpdate(Sender: TObject);
+    procedure actGoToExecute(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure actHomeUpdate(Sender: TObject);
+    procedure actGetSourceExecute(Sender: TObject);
+    procedure actGetTextExecute(Sender: TObject);
     procedure actZoomInExecute(Sender: TObject);
     procedure actZoomOutExecute(Sender: TObject);
     procedure actZoomResetExecute(Sender: TObject);
+    procedure actExecuteJSExecute(Sender: TObject);
+    procedure Exit1Click(Sender: TObject);
+    procedure actFileSchemeExecute(Sender: TObject);
+    procedure actDomExecute(Sender: TObject);
+    procedure actNextUpdate(Sender: TObject);
+    procedure actPrevUpdate(Sender: TObject);
     procedure crmAddressChange(Sender: TObject; const browser: ICefBrowser;
       const frame: ICefFrame; const url: ustring);
+    procedure crmLoadEnd(Sender: TObject; const browser: ICefBrowser;
+      const frame: ICefFrame; httpStatusCode: Integer);
+    procedure crmLoadStart(Sender: TObject; const browser: ICefBrowser;
+      const frame: ICefFrame);
+    procedure crmStatusMessage(Sender: TObject; const browser: ICefBrowser;
+      const value: ustring);
+    procedure crmTitleChange(Sender: TObject; const browser: ICefBrowser;
+      const title: ustring);
+    procedure actDevToolExecute(Sender: TObject);
+    procedure actDocExecute(Sender: TObject);
+    procedure actGroupExecute(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure crmBeforeDownload(Sender: TObject; const browser: ICefBrowser;
       const downloadItem: ICefDownloadItem; const suggestedName: ustring;
       const callback: ICefBeforeDownloadCallback);
+    procedure crmDownloadUpdated(Sender: TObject; const browser: ICefBrowser;
+      const downloadItem: ICefDownloadItem;
+      const callback: ICefDownloadItemCallback);
+    procedure crmProcessMessageReceived(Sender: TObject;
+      const browser: ICefBrowser; sourceProcess: TCefProcessId;
+      const message: ICefProcessMessage; out Result: Boolean);
+    procedure crmBeforeResourceLoad(Sender: TObject; const browser: ICefBrowser;
+      const frame: ICefFrame; const request: ICefRequest; out Result: Boolean);
     procedure crmBeforePopup(Sender: TObject; const browser: ICefBrowser;
       const frame: ICefFrame; const targetUrl, targetFrameName: ustring;
       var popupFeatures: TCefPopupFeatures; var windowInfo: TCefWindowInfo;
       var client: ICefClient; var settings: TCefBrowserSettings;
       var noJavascriptAccess: Boolean; out Result: Boolean);
-    procedure crmBeforeResourceLoad(Sender: TObject; const browser: ICefBrowser;
-      const frame: ICefFrame; const request: ICefRequest; out Result: Boolean);
-    procedure crmDownloadUpdated(Sender: TObject; const browser: ICefBrowser;
-      const downloadItem: ICefDownloadItem;
-      const callback: ICefDownloadItemCallback);
-    procedure crmLoadEnd(Sender: TObject; const browser: ICefBrowser;
-      const frame: ICefFrame; httpStatusCode: Integer);
-    procedure crmLoadStart(Sender: TObject; const browser: ICefBrowser;
-      const frame: ICefFrame);
-    procedure crmProcessMessageReceived(Sender: TObject;
-      const browser: ICefBrowser; sourceProcess: TCefProcessId;
-      const message: ICefProcessMessage; out Result: Boolean);
-    procedure crmStatusMessage(Sender: TObject; const browser: ICefBrowser;
-      const value: ustring);
-    procedure crmTitleChange(Sender: TObject; const browser: ICefBrowser;
-      const title: ustring);
-    procedure edAddressKeyPress(Sender: TObject; var Key: Char);
-    procedure MenuItemExitClick(Sender: TObject);
+    procedure actPrintExecute(Sender: TObject);
+    procedure crmBeforeContextMenu(Sender: TObject; const browser: ICefBrowser;
+      const frame: ICefFrame; const params: ICefContextMenuParams;
+      const model: ICefMenuModel);
+    procedure crmContextMenuCommand(Sender: TObject; const browser: ICefBrowser;
+      const frame: ICefFrame; const params: ICefContextMenuParams;
+      commandId: Integer; eventFlags: TCefEventFlags; out Result: Boolean);
+    procedure crmCertificateError(Sender: TObject; certError: Integer;
+      const requestUrl: ustring;
+      const callback: ICefAllowCertificateErrorCallback; out Result: Boolean);
   private
+    { Déclarations privées }
     FLoading: Boolean;
     function IsMain(const b: ICefBrowser; const f: ICefFrame = nil): Boolean;
   end;
@@ -130,16 +139,24 @@ var
 
 implementation
 
-{$R *.dfm}
+const
+  CUSTOMMENUCOMMAND_INSPECTELEMENT = 7241221;
 
-procedure TMainForm.actCloseDevToolsExecute(Sender: TObject);
-begin
-  crm.Browser.Host.CloseDevTools;
-end;
+{$R *.dfm}
 
 procedure TMainForm.actDevToolExecute(Sender: TObject);
 begin
-  crm.ShowDevTools;
+  if actDevTool.Checked then
+  begin
+    DevTools.Visible := True;
+    Splitter.Visible := True;
+    DevTools.ShowDevTools(crm.Browser);
+  end else
+  begin
+    DevTools.CloseDevTools(crm.Browser);
+    Splitter.Visible := False;
+    DevTools.Visible := False;
+  end;
 end;
 
 procedure TMainForm.actDocExecute(Sender: TObject);
@@ -174,7 +191,7 @@ begin
   source := StringReplace(source, '<', '&lt;', [rfReplaceAll]);
   source := StringReplace(source, '>', '&gt;', [rfReplaceAll]);
   source := '<html><body>Source:<pre>' + source + '</pre></body></html>';
-  MainForm.crm.Browser.MainFrame.LoadString(source, '');
+  MainForm.crm.Browser.MainFrame.LoadString(source, 'source://html');
 end;
 
 procedure TMainForm.actGetSourceExecute(Sender: TObject);
@@ -190,7 +207,7 @@ begin
   source := StringReplace(source, '<', '&lt;', [rfReplaceAll]);
   source := StringReplace(source, '>', '&gt;', [rfReplaceAll]);
   source := '<html><body>Text:<pre>' + source + '</pre></body></html>';
-  MainForm.crm.Browser.MainFrame.LoadString(source, '');
+  MainForm.crm.Browser.MainFrame.LoadString(source, 'source://text');
 end;
 
 procedure TMainForm.actGetTextExecute(Sender: TObject);
@@ -229,8 +246,7 @@ end;
 procedure TMainForm.actNextUpdate(Sender: TObject);
 begin
   if crm.Browser <> nil then
-    actNext.Enabled := crm.Browser.CanGoForward
-  else
+    actNext.Enabled := crm.Browser.CanGoForward else
     actNext.Enabled := False;
 end;
 
@@ -243,8 +259,7 @@ end;
 procedure TMainForm.actPrevUpdate(Sender: TObject);
 begin
   if crm.Browser <> nil then
-    actPrev.Enabled := crm.Browser.CanGoBack
-  else
+    actPrev.Enabled := crm.Browser.CanGoBack else
     actPrev.Enabled := False;
 end;
 
@@ -257,16 +272,14 @@ procedure TMainForm.actReloadExecute(Sender: TObject);
 begin
   if crm.Browser <> nil then
     if FLoading then
-      crm.Browser.StopLoad
-    else
+      crm.Browser.StopLoad else
       crm.Browser.Reload;
 end;
 
 procedure TMainForm.actReloadUpdate(Sender: TObject);
 begin
   if FLoading then
-    TAction(sender).Caption := 'X'
-  else
+    TAction(sender).Caption := 'X' else
     TAction(sender).Caption := 'R';
   TAction(Sender).Enabled := crm.Browser <> nil;
 end;
@@ -299,6 +312,13 @@ procedure TMainForm.crmAddressChange(Sender: TObject;
 begin
   if IsMain(browser, frame) then
     edAddress.Text := url;
+end;
+
+procedure TMainForm.crmBeforeContextMenu(Sender: TObject;
+  const browser: ICefBrowser; const frame: ICefFrame;
+  const params: ICefContextMenuParams; const model: ICefMenuModel);
+begin
+  model.AddItem(CUSTOMMENUCOMMAND_INSPECTELEMENT, 'Inspect Element');
 end;
 
 procedure TMainForm.crmBeforeDownload(Sender: TObject;
@@ -334,13 +354,43 @@ begin
     end;
 end;
 
+procedure TMainForm.crmCertificateError(Sender: TObject; certError: Integer;
+  const requestUrl: ustring; const callback: ICefAllowCertificateErrorCallback;
+  out Result: Boolean);
+begin
+  // let use untrusted certificates (ex: cacert.org)
+  callback.Cont(True);
+  Result := True;
+end;
+
+procedure TMainForm.crmContextMenuCommand(Sender: TObject;
+  const browser: ICefBrowser; const frame: ICefFrame;
+  const params: ICefContextMenuParams; commandId: Integer;
+  eventFlags: TCefEventFlags; out Result: Boolean);
+var
+  mousePoint: TCefPoint;
+begin
+  Result := False;
+  if (commandId = CUSTOMMENUCOMMAND_INSPECTELEMENT) then
+  begin
+    mousePoint.x := params.XCoord;
+    mousePoint.y := params.YCoord;
+    Splitter.Visible := True;
+    DevTools.Visible := True;
+    actDevTool.Checked := True;
+    DevTools.CloseDevTools(crm.Browser);
+    application.ProcessMessages;
+    DevTools.ShowDevTools(crm.Browser,@mousePoint);
+    Result := True;
+  end;
+end;
+
 procedure TMainForm.crmDownloadUpdated(Sender: TObject;
   const browser: ICefBrowser; const downloadItem: ICefDownloadItem;
   const callback: ICefDownloadItemCallback);
 begin
   if downloadItem.IsInProgress then
-    StatusBar.SimpleText := IntToStr(downloadItem.PercentComplete) + '%'
-  else
+    StatusBar.SimpleText := IntToStr(downloadItem.PercentComplete) + '%' else
     StatusBar.SimpleText := '';
 end;
 
@@ -366,8 +416,7 @@ begin
   begin
     StatusBar.SimpleText := message.ArgumentList.GetString(0);
     Result := True;
-  end
-  else
+  end else
     Result := False;
 end;
 
@@ -396,7 +445,7 @@ begin
   end;
 end;
 
-procedure TMainForm.MenuItemExitClick(Sender: TObject);
+procedure TMainForm.Exit1Click(Sender: TObject);
 begin
   Close;
 end;
@@ -428,25 +477,25 @@ function TCustomRenderProcessHandler.OnProcessMessageReceived(
   const browser: ICefBrowser; sourceProcess: TCefProcessId;
   const message: ICefProcessMessage): Boolean;
 begin
-{$IFDEF DELPHI14_UP}
-  if (message.Name = 'visitdom') then
-    begin
-      browser.MainFrame.VisitDomProc(
-        procedure(const doc: ICefDomDocument) begin
-          doc.Body.AddEventListenerProc('mouseover', True,
-            procedure (const event: ICefDomEvent)
-            var
-              msg: ICefProcessMessage;
-            begin
-              msg := TCefProcessMessageRef.New('mouseover');
-              msg.ArgumentList.SetString(0, getpath(event.Target));
-              browser.SendProcessMessage(PID_BROWSER, msg);
-            end)
-        end);
-        Result := True;
-    end
-  else
-{$ENDIF}
+//{$IFDEF DELPHI14_UP}
+//  if (message.Name = 'visitdom') then
+//    begin
+//      browser.MainFrame.VisitDomProc(
+//        procedure(const doc: ICefDomDocument) begin
+//          doc.Body.AddEventListenerProc('mouseover', True,
+//            procedure (const event: ICefDomEvent)
+//            var
+//              msg: ICefProcessMessage;
+//            begin
+//              msg := TCefProcessMessageRef.New('mouseover');
+//              msg.ArgumentList.SetString(0, getpath(event.Target));
+//              browser.SendProcessMessage(PID_BROWSER, msg);
+//            end)
+//        end);
+//        Result := True;
+//    end
+//  else
+//{$ENDIF}
     Result := False;
 end;
 

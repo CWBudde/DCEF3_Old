@@ -41,8 +41,6 @@ type
     FOnLoadStart: TOnLoadStart;
     FOnLoadEnd: TOnLoadEnd;
     FOnLoadError: TOnLoadError;
-    FOnRenderProcessTerminated: TOnRenderProcessTerminated;
-    FOnPluginCrashed: TOnPluginCrashed;
 
     FOnTakeFocus: TOnTakeFocus;
     FOnSetFocus: TOnSetFocus;
@@ -80,13 +78,13 @@ type
     FOnResourceRedirect: TOnResourceRedirect;
     FOnGetAuthCredentials: TOnGetAuthCredentials;
     FOnQuotaRequest: TOnQuotaRequest;
-    FOnGetCookieManager: TOnGetCookieManager;
     FOnProtocolExecution: TOnProtocolExecution;
-
     FOnBeforePluginLoad: TOnBeforePluginLoad;
+    FOnCertificateError: TOnCertificateError;
+    FOnPluginCrashed: TOnPluginCrashed;
+    FOnRenderProcessTerminated: TOnRenderProcessTerminated;
 
     FOnFileDialog: TOnFileDialog;
-
     FOnDragEnter: TOnDragEnter;
 
     FOptions: TChromiumOptions;
@@ -118,8 +116,6 @@ type
     procedure doOnLoadEnd(const browser: ICefBrowser; const frame: ICefFrame; httpStatusCode: Integer); virtual;
     procedure doOnLoadError(const browser: ICefBrowser; const frame: ICefFrame; errorCode: Integer;
       const errorText, failedUrl: ustring); virtual;
-    procedure doOnRenderProcessTerminated(const browser: ICefBrowser; status: TCefTerminationStatus); virtual;
-    procedure doOnPluginCrashed(const browser: ICefBrowser; const pluginPath: ustring); virtual;
 
     procedure doOnTakeFocus(const browser: ICefBrowser; next: Boolean); virtual;
     function doOnSetFocus(const browser: ICefBrowser; source: TCefFocusSource): Boolean; virtual;
@@ -149,8 +145,8 @@ type
     procedure doOnDownloadUpdated(const browser: ICefBrowser; const downloadItem: ICefDownloadItem;
         const callback: ICefDownloadItemCallback); virtual;
 
-    procedure doOnRequestGeolocationPermission(const browser: ICefBrowser;
-      const requestingUrl: ustring; requestId: Integer; const callback: ICefGeolocationCallback); virtual;
+    function doOnRequestGeolocationPermission(const browser: ICefBrowser;
+      const requestingUrl: ustring; requestId: Integer; const callback: ICefGeolocationCallback): Boolean; virtual;
     procedure doOnCancelGeolocationPermission(const browser: ICefBrowser;
       const requestingUrl: ustring; requestId: Integer); virtual;
 
@@ -187,14 +183,14 @@ type
       const callback: ICefAuthCallback): Boolean; virtual;
     function doOnQuotaRequest(const browser: ICefBrowser; const originUrl: ustring;
       newSize: Int64; const callback: ICefQuotaCallback): Boolean; virtual;
-    function doOnGetCookieManager(const browser: ICefBrowser;
-      const mainUrl: ustring): ICefCookieManager; virtual;
     procedure doOnProtocolExecution(const browser: ICefBrowser;
-
       const url: ustring; out allowOsExecution: Boolean); virtual;
-
     function doOnBeforePluginLoad(const browser: ICefBrowser; const url,
       policyUrl: ustring; const info: ICefWebPluginInfo): Boolean; virtual;
+    function doOnCertificateError(certError: TCefErrorCode; const requestUrl: ustring;
+      const callback: ICefAllowCertificateErrorCallback): Boolean; virtual;
+    procedure doOnRenderProcessTerminated(const browser: ICefBrowser; status: TCefTerminationStatus); virtual;
+    procedure doOnPluginCrashed(const browser: ICefBrowser; const pluginPath: ustring); virtual;
 
     function doOnFileDialog(const browser: ICefBrowser; mode: TCefFileDialogMode;
       const title, defaultFileName: ustring; acceptTypes: TStrings;
@@ -210,7 +206,11 @@ type
     procedure doOnPaint(const browser: ICefBrowser; kind: TCefPaintElementType;
       dirtyRectsCount: NativeUInt; const dirtyRects: PCefRectArray;
       const buffer: Pointer; width, height: Integer);
-    procedure doOnCursorChange(const browser: ICefBrowser; cursor: TCefCursorHandle);
+    procedure doOnCursorChange(const browser: ICefBrowser; cursor: TCefCursorHandle;
+      cursorType: TCefCursorType; const customCursorInfo: PCefCursorInfo);
+    function doOnStartDragging(const browser: ICefBrowser; const dragData: ICefDragData;
+      allowedOps: TCefDragOperations; x, y: Integer): Boolean;
+    procedure doOnUpdateDragCursor(const browser: ICefBrowser; operation: TCefDragOperation);
     procedure doOnScrollOffsetChanged(const browser: ICefBrowser);
 
     function doOnDragEnter(const browser: ICefBrowser; const dragData: ICefDragData;
@@ -220,8 +220,6 @@ type
     property OnLoadStart: TOnLoadStart read FOnLoadStart write FOnLoadStart;
     property OnLoadEnd: TOnLoadEnd read FOnLoadEnd write FOnLoadEnd;
     property OnLoadError: TOnLoadError read FOnLoadError write FOnLoadError;
-    property OnRenderProcessTerminated: TOnRenderProcessTerminated read FOnRenderProcessTerminated write FOnRenderProcessTerminated;
-    property OnPluginCrashed: TOnPluginCrashed read FOnPluginCrashed write FOnPluginCrashed;
 
     property OnTakeFocus: TOnTakeFocus read FOnTakeFocus write FOnTakeFocus;
     property OnSetFocus: TOnSetFocus read FOnSetFocus write FOnSetFocus;
@@ -259,10 +257,11 @@ type
     property OnResourceRedirect: TOnResourceRedirect read FOnResourceRedirect write FOnResourceRedirect;
     property OnGetAuthCredentials: TOnGetAuthCredentials read FOnGetAuthCredentials write FOnGetAuthCredentials;
     property OnQuotaRequest: TOnQuotaRequest read FOnQuotaRequest write FOnQuotaRequest;
-    property OnGetCookieManager: TOnGetCookieManager read FOnGetCookieManager write FOnGetCookieManager;
     property OnProtocolExecution: TOnProtocolExecution read FOnProtocolExecution write FOnProtocolExecution;
-
     property OnBeforePluginLoad: TOnBeforePluginLoad read FOnBeforePluginLoad write FOnBeforePluginLoad;
+    property OnCertificateError: TOnCertificateError read FOnCertificateError write FOnCertificateError;
+    property OnPluginCrashed: TOnPluginCrashed read FOnPluginCrashed write FOnPluginCrashed;
+    property OnRenderProcessTerminated: TOnRenderProcessTerminated read FOnRenderProcessTerminated write FOnRenderProcessTerminated;
 
     property OnFileDialog: TOnFileDialog read FOnFileDialog write FOnFileDialog;
     property OnDragEnter: TOnDragEnter read FOnDragEnter write FOnDragEnter;
@@ -293,8 +292,6 @@ type
     property OnLoadStart;
     property OnLoadEnd;
     property OnLoadError;
-    property OnRenderProcessTerminated;
-    property OnPluginCrashed;
 
     property OnTakeFocus;
     property OnSetFocus;
@@ -332,10 +329,11 @@ type
     property OnResourceRedirect;
     property OnGetAuthCredentials;
     property OnQuotaRequest;
-    property OnGetCookieManager;
     property OnProtocolExecution;
-
     property OnBeforePluginLoad;
+    property OnCertificateError;
+    property OnPluginCrashed;
+    property OnRenderProcessTerminated;
 
     property OnFileDialog;
     property OnDragEnter;
@@ -424,7 +422,7 @@ begin
   begin
     FillChar(info, SizeOf(info), 0);
 {$ifdef MSWINDOWS}
-    info.window_rendering_disabled := True;
+    info.windowless_rendering_enabled := Ord(True);
 {$endif}
 {$ifdef MACOSX}
     info.m_bHidden := 1;
@@ -443,7 +441,11 @@ end;
 destructor TCustomChromiumFMX.Destroy;
 begin
   if FBrowser <> nil then
-    FBrowser.Host.ParentWindowWillClose;
+  begin
+    FBrowser.StopLoad;
+    FBrowser.Host.CloseBrowser(True);
+  end;
+
   if FHandler <> nil then
     (FHandler as ICefClientHandler).Disconnect;
   FHandler := nil;
@@ -577,6 +579,15 @@ begin
     FOnCancelGeolocationPermission(Self, browser, requestingUrl, requestId);
 end;
 
+function TCustomChromiumFMX.doOnCertificateError(certError: TCefErrorCode;
+  const requestUrl: ustring;
+  const callback: ICefAllowCertificateErrorCallback): Boolean;
+begin
+  Result := False;
+  if Assigned(FOnCertificateError) then
+    FOnCertificateError(Self, certError, requestUrl, callback, Result);
+end;
+
 function TCustomChromiumFMX.doOnClose(const browser: ICefBrowser): Boolean;
 begin
   Result := False;
@@ -609,25 +620,38 @@ begin
 end;
 
 procedure TCustomChromiumFMX.doOnCursorChange(const browser: ICefBrowser;
-  cursor: TCefCursorHandle);
+  cursor: TCefCursorHandle; cursorType: TCefCursorType;
+  const customCursorInfo: PCefCursorInfo);
 begin
-  if browser.IsSame(Self.Browser) then
-  case cursor of
-    65541: Self.Cursor := crArrow;
-    65543: Self.Cursor := crIBeam;
-    65545: Self.Cursor := crHourGlass;
-    65547: Self.Cursor := crCross;
-    65551: Self.Cursor := crSizeNWSE;
-    65553: Self.Cursor := crSizeNESW;
-    65555: Self.Cursor := crSizeWE;
-    65557: Self.Cursor := crSizeNS;
-    65559: Self.Cursor := crSizeAll;
-    65561: Self.Cursor := crNo;
-    65563: Self.Cursor := crAppStart;
-    65565: Self.Cursor := crHelp;
-    65569: Self.Cursor := crHandPoint;
+  if not (csDestroying in ComponentState) and browser.IsSame(Self.Browser) then
+  case cursorType of
+    CT_POINTER: Self.Cursor := crArrow;
+    CT_CROSS: Self.Cursor:= crCross;
+    CT_HAND: Self.Cursor := crHandPoint;
+    CT_IBEAM: Self.Cursor := crIBeam;
+    CT_WAIT: Self.Cursor := crHourGlass;
+    CT_HELP: Self.Cursor := crHelp;
+    CT_EASTRESIZE: Self.Cursor := crSizeWE;
+    CT_NORTHRESIZE: Self.Cursor := crSizeNS;
+    CT_NORTHEASTRESIZE: Self.Cursor:= crSizeNESW;
+    CT_NORTHWESTRESIZE: Self.Cursor:= crSizeNWSE;
+    CT_SOUTHRESIZE: Self.Cursor:= crSizeNS;
+    CT_SOUTHEASTRESIZE: Self.Cursor:= crSizeNWSE;
+    CT_SOUTHWESTRESIZE: Self.Cursor:= crSizeNESW;
+    CT_WESTRESIZE: Self.Cursor := crSizeWE;
+    CT_NORTHSOUTHRESIZE: Self.Cursor:= crSizeNS;
+    CT_EASTWESTRESIZE: Self.Cursor := crSizeWE;
+    CT_NORTHEASTSOUTHWESTRESIZE: Self.Cursor:= crSizeNESW;
+    CT_NORTHWESTSOUTHEASTRESIZE: Self.Cursor:= crSizeNWSE;
+    CT_COLUMNRESIZE: Self.Cursor:= crHSplit;
+    CT_ROWRESIZE: Self.Cursor:= crVSplit;
+    CT_MOVE: Self.Cursor := crSizeAll;
+    CT_PROGRESS: Self.Cursor := crAppStart;
+    CT_NODROP: Self.Cursor:= crNo;
+    CT_NONE: Self.Cursor:= crNone;
+    CT_NOTALLOWED: Self.Cursor:= crNo;
   else
-    Self.Cursor := crDefault;
+    Self.Cursor := crArrow;
   end;
 end;
 
@@ -673,14 +697,6 @@ begin
       port, realm, scheme, callback, Result);
 end;
 
-function TCustomChromiumFMX.doOnGetCookieManager(const browser: ICefBrowser;
-  const mainUrl: ustring): ICefCookieManager;
-begin
-  if Assigned(FOnGetCookieManager) then
-    FOnGetCookieManager(Self, browser, mainUrl, Result) else
-    Result := nil;
-end;
-
 function TCustomChromiumFMX.doOnGetResourceHandler(const browser: ICefBrowser;
   const frame: ICefFrame; const request: ICefRequest): ICefResourceHandler;
 begin
@@ -692,7 +708,9 @@ end;
 function TCustomChromiumFMX.doOnGetRootScreenRect(const browser: ICefBrowser;
   rect: PCefRect): Boolean;
 begin
-  if Self.Browser.IsSame(browser) and (FBuffer <> nil) then
+  if not (csDestroying in ComponentState)
+    and Self.Browser.IsSame(browser)
+    and (FBuffer <> nil) then
   begin
     rect.x := 0;
     rect.y := 0;
@@ -718,7 +736,9 @@ end;
 function TCustomChromiumFMX.doOnGetViewRect(const browser: ICefBrowser;
   rect: PCefRect): Boolean;
 begin
-  if Self.Browser.IsSame(browser) and (FBuffer <> nil) then
+  if not (csDestroying in ComponentState)
+    and Self.Browser.IsSame(browser)
+    and (FBuffer <> nil) then
   begin
     rect.x := 0;
     rect.y := 0;
@@ -791,6 +811,8 @@ var
   src, dst: PByte;
   offset, i, {j,} w, c: Integer;
 begin
+  if csDestroying in ComponentState then Exit;
+
   if (FBuffer <> nil) and (FBuffer.Width = Width) and (FBuffer.Height = Height) then
 //    begin
 //      Move(buffer^, StartLine^, vw * vh * 4);
@@ -878,12 +900,13 @@ begin
     FOnRenderProcessTerminated(Self, browser, status);
 end;
 
-procedure TCustomChromiumFMX.doOnRequestGeolocationPermission(
+function TCustomChromiumFMX.doOnRequestGeolocationPermission(
   const browser: ICefBrowser; const requestingUrl: ustring; requestId: Integer;
-  const callback: ICefGeolocationCallback);
+  const callback: ICefGeolocationCallback): Boolean;
 begin
+  Result := False;
   if Assigned(FOnRequestGeolocationPermission) then
-    FOnRequestGeolocationPermission(Self, browser, requestingUrl, requestId, callback);
+    FOnRequestGeolocationPermission(Self, browser, requestingUrl, requestId, callback, Result);
 end;
 
 procedure TCustomChromiumFMX.doOnResetDialogState(const browser: ICefBrowser);
@@ -920,6 +943,13 @@ begin
     FOnSetFocus(Self, browser, source, Result);
 end;
 
+function TCustomChromiumFMX.doOnStartDragging(const browser: ICefBrowser;
+  const dragData: ICefDragData; allowedOps: TCefDragOperations; x,
+  y: Integer): Boolean;
+begin
+  Result := False;
+end;
+
 procedure TCustomChromiumFMX.doOnStatusMessage(const browser: ICefBrowser;
   const value: ustring);
 begin
@@ -949,9 +979,17 @@ begin
     FOnTooltip(Self, browser, text, Result);
 end;
 
+procedure TCustomChromiumFMX.doOnUpdateDragCursor(const browser: ICefBrowser;
+  operation: TCefDragOperation);
+begin
+
+end;
+
 procedure TCustomChromiumFMX.GetSettings(var settings: TCefBrowserSettings);
 begin
   Assert(settings.size >= SizeOf(settings));
+  settings.windowless_frame_rate := FOptions.WindowlessFrameRate;
+
   settings.standard_font_family := CefString(FFontOptions.StandardFontFamily);
   settings.fixed_font_family := CefString(FFontOptions.FixedFontFamily);
   settings.serif_font_family := CefString(FFontOptions.SerifFontFamily);
@@ -984,7 +1022,6 @@ begin
   settings.databases := FOptions.Databases;
   settings.application_cache := FOptions.ApplicationCache;
   settings.webgl := FOptions.Webgl;
-  settings.accelerated_compositing := FOptions.AcceleratedCompositing;
   settings.background_color := FOptions.BackgroundColor;
 end;
 
@@ -1126,7 +1163,6 @@ procedure TCustomChromiumFMX.ReCreateBrowser(const url: string);
 begin
   if (FBrowser <> nil) then
   begin
-    FBrowser.Host.ParentWindowWillClose;
     FBrowser := nil;
     CreateBrowser;
     Load(url);
@@ -1143,10 +1179,10 @@ begin
     brws := FBrowser;
     if (brws <> nil) then
     begin
+      if FBuffer = nil then
+        FBuffer := TBitmap.Create(Trunc(Width), Trunc(Height)) else
+        FBuffer.SetSize(Trunc(Width), Trunc(Height));
       brws.Host.WasResized;
-      if FBuffer <> nil then
-        FBuffer.Free;
-      FBuffer := TBitmap.Create(Trunc(Width), Trunc(Height));
     end;
   end;
 end;

@@ -33,6 +33,18 @@ uses
 {$endif};
 
 type
+  TChromiumDevTools = class(TWinControl)
+  protected
+    procedure WndProc(var Message: TMessage); override;
+    procedure Resize; override;
+  public
+    procedure ShowDevTools(const browser: ICefBrowser; inspectElementAt: PCefPoint = nil);
+    procedure CloseDevTools(const browser: ICefBrowser);
+  published
+    property Align;
+    property Visible;
+  end;
+
   TCustomChromium = class(TWinControl, IChromiumEvents)
   private
     FHandler: ICefClient;
@@ -44,8 +56,6 @@ type
     FOnLoadStart: TOnLoadStart;
     FOnLoadEnd: TOnLoadEnd;
     FOnLoadError: TOnLoadError;
-    FOnRenderProcessTerminated: TOnRenderProcessTerminated;
-    FOnPluginCrashed: TOnPluginCrashed;
 
     FOnTakeFocus: TOnTakeFocus;
     FOnSetFocus: TOnSetFocus;
@@ -83,9 +93,12 @@ type
     FOnResourceRedirect: TOnResourceRedirect;
     FOnGetAuthCredentials: TOnGetAuthCredentials;
     FOnQuotaRequest: TOnQuotaRequest;
-    FOnGetCookieManager: TOnGetCookieManager;
     FOnProtocolExecution: TOnProtocolExecution;
     FOnBeforePluginLoad: TOnBeforePluginLoad;
+    FOnCertificateError: TOnCertificateError;
+    FOnPluginCrashed: TOnPluginCrashed;
+    FOnRenderProcessTerminated: TOnRenderProcessTerminated;
+
     FOnFileDialog: TOnFileDialog;
     FOnDragEnter: TOnDragEnter;
 
@@ -109,8 +122,6 @@ type
     procedure doOnLoadEnd(const browser: ICefBrowser; const frame: ICefFrame; httpStatusCode: Integer); virtual;
     procedure doOnLoadError(const browser: ICefBrowser; const frame: ICefFrame; errorCode: Integer;
       const errorText, failedUrl: ustring); virtual;
-    procedure doOnRenderProcessTerminated(const browser: ICefBrowser; status: TCefTerminationStatus); virtual;
-    procedure doOnPluginCrashed(const browser: ICefBrowser; const pluginPath: ustring); virtual;
 
     procedure doOnTakeFocus(const browser: ICefBrowser; next: Boolean); virtual;
     function doOnSetFocus(const browser: ICefBrowser; source: TCefFocusSource): Boolean; virtual;
@@ -140,8 +151,8 @@ type
     procedure doOnDownloadUpdated(const browser: ICefBrowser; const downloadItem: ICefDownloadItem;
         const callback: ICefDownloadItemCallback); virtual;
 
-    procedure doOnRequestGeolocationPermission(const browser: ICefBrowser;
-      const requestingUrl: ustring; requestId: Integer; const callback: ICefGeolocationCallback); virtual;
+    function doOnRequestGeolocationPermission(const browser: ICefBrowser;
+      const requestingUrl: ustring; requestId: Integer; const callback: ICefGeolocationCallback): Boolean; virtual;
     procedure doOnCancelGeolocationPermission(const browser: ICefBrowser;
       const requestingUrl: ustring; requestId: Integer); virtual;
 
@@ -152,9 +163,7 @@ type
       const messageText: ustring; isReload: Boolean;
       const callback: ICefJsDialogCallback): Boolean; virtual;
     procedure doOnResetDialogState(const browser: ICefBrowser); virtual;
-
     procedure doOnDialogClosed(const browser: ICefBrowser); virtual;
-
 
     function doOnBeforePopup(const browser: ICefBrowser;
       const frame: ICefFrame; const targetUrl, targetFrameName: ustring;
@@ -179,14 +188,14 @@ type
       const callback: ICefAuthCallback): Boolean; virtual;
     function doOnQuotaRequest(const browser: ICefBrowser; const originUrl: ustring;
       newSize: Int64; const callback: ICefQuotaCallback): Boolean; virtual;
-    function doOnGetCookieManager(const browser: ICefBrowser;
-      const mainUrl: ustring): ICefCookieManager; virtual;
     procedure doOnProtocolExecution(const browser: ICefBrowser;
-
       const url: ustring; out allowOsExecution: Boolean); virtual;
-
     function doOnBeforePluginLoad(const browser: ICefBrowser; const url,
       policyUrl: ustring; const info: ICefWebPluginInfo): Boolean; virtual;
+    function doOnCertificateError(certError: TCefErrorCode; const requestUrl: ustring;
+      const callback: ICefAllowCertificateErrorCallback): Boolean; virtual;
+    procedure doOnPluginCrashed(const browser: ICefBrowser; const pluginPath: ustring); virtual;
+    procedure doOnRenderProcessTerminated(const browser: ICefBrowser; status: TCefTerminationStatus); virtual;
 
     function doOnFileDialog(const browser: ICefBrowser; mode: TCefFileDialogMode;
       const title, defaultFileName: ustring; acceptTypes: TStrings;
@@ -202,7 +211,11 @@ type
     procedure doOnPaint(const browser: ICefBrowser; kind: TCefPaintElementType;
       dirtyRectsCount: NativeUInt; const dirtyRects: PCefRectArray;
       const buffer: Pointer; width, height: Integer);
-    procedure doOnCursorChange(const browser: ICefBrowser; cursor: TCefCursorHandle);
+    procedure doOnCursorChange(const browser: ICefBrowser; cursor: TCefCursorHandle;
+      cursorType: TCefCursorType; const customCursorInfo: PCefCursorInfo);
+    function doOnStartDragging(const browser: ICefBrowser; const dragData: ICefDragData;
+      allowedOps: TCefDragOperations; x, y: Integer): Boolean;
+    procedure doOnUpdateDragCursor(const browser: ICefBrowser; operation: TCefDragOperation);
     procedure doOnScrollOffsetChanged(const browser: ICefBrowser);
 
     function doOnDragEnter(const browser: ICefBrowser; const dragData: ICefDragData;
@@ -212,8 +225,6 @@ type
     property OnLoadStart: TOnLoadStart read FOnLoadStart write FOnLoadStart;
     property OnLoadEnd: TOnLoadEnd read FOnLoadEnd write FOnLoadEnd;
     property OnLoadError: TOnLoadError read FOnLoadError write FOnLoadError;
-    property OnRenderProcessTerminated: TOnRenderProcessTerminated read FOnRenderProcessTerminated write FOnRenderProcessTerminated;
-    property OnPluginCrashed: TOnPluginCrashed read FOnPluginCrashed write FOnPluginCrashed;
 
     property OnTakeFocus: TOnTakeFocus read FOnTakeFocus write FOnTakeFocus;
     property OnSetFocus: TOnSetFocus read FOnSetFocus write FOnSetFocus;
@@ -251,10 +262,11 @@ type
     property OnResourceRedirect: TOnResourceRedirect read FOnResourceRedirect write FOnResourceRedirect;
     property OnGetAuthCredentials: TOnGetAuthCredentials read FOnGetAuthCredentials write FOnGetAuthCredentials;
     property OnQuotaRequest: TOnQuotaRequest read FOnQuotaRequest write FOnQuotaRequest;
-    property OnGetCookieManager: TOnGetCookieManager read FOnGetCookieManager write FOnGetCookieManager;
     property OnProtocolExecution: TOnProtocolExecution read FOnProtocolExecution write FOnProtocolExecution;
-
     property OnBeforePluginLoad: TOnBeforePluginLoad read FOnBeforePluginLoad write FOnBeforePluginLoad;
+    property OnCertificateError: TOnCertificateError read FOnCertificateError write FOnCertificateError;
+    property OnRenderProcessTerminated: TOnRenderProcessTerminated read FOnRenderProcessTerminated write FOnRenderProcessTerminated;
+    property OnPluginCrashed: TOnPluginCrashed read FOnPluginCrashed write FOnPluginCrashed;
 
     property OnFileDialog: TOnFileDialog read FOnFileDialog write FOnFileDialog;
     property OnDragEnter: TOnDragEnter read FOnDragEnter write FOnDragEnter;
@@ -270,7 +282,8 @@ type
     destructor Destroy; override;
     procedure Load(const url: ustring);
     procedure ReCreateBrowser(const url: string);
-    procedure ShowDevTools;
+    procedure ShowDevTools(inspectElementAt: PCefPoint = nil);
+    procedure CloseDevTools;
   end;
 
   TCustomChromiumOSR = class(TComponent, IChromiumEvents)
@@ -284,8 +297,6 @@ type
     FOnLoadStart: TOnLoadStart;
     FOnLoadEnd: TOnLoadEnd;
     FOnLoadError: TOnLoadError;
-    FOnRenderProcessTerminated: TOnRenderProcessTerminated;
-    FOnPluginCrashed: TOnPluginCrashed;
 
     FOnTakeFocus: TOnTakeFocus;
     FOnSetFocus: TOnSetFocus;
@@ -323,13 +334,13 @@ type
     FOnResourceRedirect: TOnResourceRedirect;
     FOnGetAuthCredentials: TOnGetAuthCredentials;
     FOnQuotaRequest: TOnQuotaRequest;
-    FOnGetCookieManager: TOnGetCookieManager;
     FOnProtocolExecution: TOnProtocolExecution;
-
     FOnBeforePluginLoad: TOnBeforePluginLoad;
+    FOnCertificateError: TOnCertificateError;
+    FOnPluginCrashed: TOnPluginCrashed;
+    FOnRenderProcessTerminated: TOnRenderProcessTerminated;
 
     FOnFileDialog: TOnFileDialog;
-
 
     FOnGetRootScreenRect: TOnGetRootScreenRect;
     FOnGetViewRect: TOnGetViewRect;
@@ -339,6 +350,8 @@ type
     FOnPopupSize: TOnPopupSize;
     FOnPaint: TOnPaint;
     FOnCursorChange: TOnCursorChange;
+    FOnStartDragging: TOnStartDragging;
+    FOnUpdateDragCursor: TOnUpdateDragCursor;
     FOnScrollOffsetChanged: TOnScrollOffsetChanged;
 
     FOnDragEnter: TOnDragEnter;
@@ -361,8 +374,6 @@ type
     procedure doOnLoadEnd(const browser: ICefBrowser; const frame: ICefFrame; httpStatusCode: Integer); virtual;
     procedure doOnLoadError(const browser: ICefBrowser; const frame: ICefFrame; errorCode: Integer;
       const errorText, failedUrl: ustring); virtual;
-    procedure doOnRenderProcessTerminated(const browser: ICefBrowser; status: TCefTerminationStatus); virtual;
-    procedure doOnPluginCrashed(const browser: ICefBrowser; const pluginPath: ustring); virtual;
 
     procedure doOnTakeFocus(const browser: ICefBrowser; next: Boolean); virtual;
     function doOnSetFocus(const browser: ICefBrowser; source: TCefFocusSource): Boolean; virtual;
@@ -392,8 +403,8 @@ type
     procedure doOnDownloadUpdated(const browser: ICefBrowser; const downloadItem: ICefDownloadItem;
         const callback: ICefDownloadItemCallback); virtual;
 
-    procedure doOnRequestGeolocationPermission(const browser: ICefBrowser;
-      const requestingUrl: ustring; requestId: Integer; const callback: ICefGeolocationCallback); virtual;
+    function doOnRequestGeolocationPermission(const browser: ICefBrowser;
+      const requestingUrl: ustring; requestId: Integer; const callback: ICefGeolocationCallback): Boolean; virtual;
     procedure doOnCancelGeolocationPermission(const browser: ICefBrowser;
       const requestingUrl: ustring; requestId: Integer); virtual;
 
@@ -430,14 +441,14 @@ type
       const callback: ICefAuthCallback): Boolean; virtual;
     function doOnQuotaRequest(const browser: ICefBrowser; const originUrl: ustring;
       newSize: Int64; const callback: ICefQuotaCallback): Boolean; virtual;
-    function doOnGetCookieManager(const browser: ICefBrowser;
-      const mainUrl: ustring): ICefCookieManager; virtual;
     procedure doOnProtocolExecution(const browser: ICefBrowser;
-
       const url: ustring; out allowOsExecution: Boolean); virtual;
-
     function doOnBeforePluginLoad(const browser: ICefBrowser; const url,
       policyUrl: ustring; const info: ICefWebPluginInfo): Boolean; virtual;
+    function doOnCertificateError(certError: TCefErrorCode; const requestUrl: ustring;
+      const callback: ICefAllowCertificateErrorCallback): Boolean; virtual;
+    procedure doOnPluginCrashed(const browser: ICefBrowser; const pluginPath: ustring); virtual;
+    procedure doOnRenderProcessTerminated(const browser: ICefBrowser; status: TCefTerminationStatus); virtual;
 
     function doOnFileDialog(const browser: ICefBrowser; mode: TCefFileDialogMode;
       const title, defaultFileName: ustring; acceptTypes: TStrings;
@@ -453,7 +464,11 @@ type
     procedure doOnPaint(const browser: ICefBrowser; kind: TCefPaintElementType;
       dirtyRectsCount: NativeUInt; const dirtyRects: PCefRectArray;
       const buffer: Pointer; width, height: Integer);
-    procedure doOnCursorChange(const browser: ICefBrowser; cursor: TCefCursorHandle);
+    procedure doOnCursorChange(const browser: ICefBrowser; cursor: TCefCursorHandle;
+      cursorType: TCefCursorType; const customCursorInfo: PCefCursorInfo);
+    function doOnStartDragging(const browser: ICefBrowser; const dragData: ICefDragData;
+      allowedOps: TCefDragOperations; x, y: Integer): Boolean;
+    procedure doOnUpdateDragCursor(const browser: ICefBrowser; operation: TCefDragOperation);
     procedure doOnScrollOffsetChanged(const browser: ICefBrowser);
 
     function doOnDragEnter(const browser: ICefBrowser; const dragData: ICefDragData;
@@ -463,8 +478,6 @@ type
     property OnLoadStart: TOnLoadStart read FOnLoadStart write FOnLoadStart;
     property OnLoadEnd: TOnLoadEnd read FOnLoadEnd write FOnLoadEnd;
     property OnLoadError: TOnLoadError read FOnLoadError write FOnLoadError;
-    property OnRenderProcessTerminated: TOnRenderProcessTerminated read FOnRenderProcessTerminated write FOnRenderProcessTerminated;
-    property OnPluginCrashed: TOnPluginCrashed read FOnPluginCrashed write FOnPluginCrashed;
 
     property OnTakeFocus: TOnTakeFocus read FOnTakeFocus write FOnTakeFocus;
     property OnSetFocus: TOnSetFocus read FOnSetFocus write FOnSetFocus;
@@ -502,10 +515,11 @@ type
     property OnResourceRedirect: TOnResourceRedirect read FOnResourceRedirect write FOnResourceRedirect;
     property OnGetAuthCredentials: TOnGetAuthCredentials read FOnGetAuthCredentials write FOnGetAuthCredentials;
     property OnQuotaRequest: TOnQuotaRequest read FOnQuotaRequest write FOnQuotaRequest;
-    property OnGetCookieManager: TOnGetCookieManager read FOnGetCookieManager write FOnGetCookieManager;
     property OnProtocolExecution: TOnProtocolExecution read FOnProtocolExecution write FOnProtocolExecution;
-
     property OnBeforePluginLoad: TOnBeforePluginLoad read FOnBeforePluginLoad write FOnBeforePluginLoad;
+    property OnCertificateError: TOnCertificateError read FOnCertificateError write FOnCertificateError;
+    property OnPluginCrashed: TOnPluginCrashed read FOnPluginCrashed write FOnPluginCrashed;
+    property OnRenderProcessTerminated: TOnRenderProcessTerminated read FOnRenderProcessTerminated write FOnRenderProcessTerminated;
 
     property OnFileDialog: TOnFileDialog read FOnFileDialog write FOnFileDialog;
     property OnGetRootScreenRect: TOnGetRootScreenRect read FOnGetRootScreenRect write FOnGetRootScreenRect;
@@ -517,6 +531,8 @@ type
     property OnPaint: TOnPaint read FOnPaint write FOnPaint;
     property OnCursorChange: TOnCursorChange read FOnCursorChange write FOnCursorChange;
     property OnScrollOffsetChanged: TOnScrollOffsetChanged read FOnScrollOffsetChanged write FOnScrollOffsetChanged;
+    property OnStartDragging: TOnStartDragging read FOnStartDragging write FOnStartDragging;
+    property OnUpdateDragCursor: TOnUpdateDragCursor read FOnUpdateDragCursor write FOnUpdateDragCursor;
     property OnDragEnter: TOnDragEnter read FOnDragEnter write FOnDragEnter;
 
     property DefaultUrl: ustring read FDefaultUrl write FDefaultUrl;
@@ -551,8 +567,6 @@ type
     property OnLoadStart;
     property OnLoadEnd;
     property OnLoadError;
-    property OnRenderProcessTerminated;
-    property OnPluginCrashed;
 
     property OnTakeFocus;
     property OnSetFocus;
@@ -589,8 +603,12 @@ type
     property OnGetResourceHandler;
     property OnResourceRedirect;
     property OnGetAuthCredentials;
-    property OnGetCookieManager;
+    property OnQuotaRequest;
     property OnProtocolExecution;
+    property OnCertificateError;
+    property OnPluginCrashed;
+    property OnRenderProcessTerminated;
+
     property OnFileDialog;
     property OnDragEnter;
 
@@ -611,8 +629,6 @@ type
     property OnLoadStart;
     property OnLoadEnd;
     property OnLoadError;
-    property OnRenderProcessTerminated;
-    property OnPluginCrashed;
 
     property OnTakeFocus;
     property OnSetFocus;
@@ -649,8 +665,10 @@ type
     property OnGetResourceHandler;
     property OnResourceRedirect;
     property OnGetAuthCredentials;
-    property OnGetCookieManager;
+    property OnQuotaRequest;
     property OnProtocolExecution;
+    property OnPluginCrashed;
+    property OnRenderProcessTerminated;
 
     property OnFileDialog;
 
@@ -734,6 +752,12 @@ end;
 
 { TCustomChromium }
 
+procedure TCustomChromium.CloseDevTools;
+begin
+  if (FBrowser <> nil) then
+    FBrowser.Host.CloseDevTools;
+end;
+
 constructor TCustomChromium.Create(AOwner: TComponent);
 begin
   inherited;
@@ -790,8 +814,9 @@ begin
   if FBrowser <> nil then
   begin
     FBrowser.StopLoad;
-    FBrowser.Host.ParentWindowWillClose;
+    FBrowser.Host.CloseBrowser(False);
   end;
+
   if FHandler <> nil then
     (FHandler as ICefClientHandler).Disconnect;
   FHandler := nil;
@@ -809,6 +834,8 @@ end;
 procedure TCustomChromium.GetSettings(var settings: TCefBrowserSettings);
 begin
   Assert(settings.size >= SizeOf(settings));
+  settings.windowless_frame_rate := FOptions.WindowlessFrameRate;
+
   settings.standard_font_family := CefString(FFontOptions.StandardFontFamily);
   settings.fixed_font_family := CefString(FFontOptions.FixedFontFamily);
   settings.serif_font_family := CefString(FFontOptions.SerifFontFamily);
@@ -841,7 +868,6 @@ begin
   settings.databases := FOptions.Databases;
   settings.application_cache := FOptions.ApplicationCache;
   settings.webgl := FOptions.Webgl;
-  settings.accelerated_compositing := FOptions.AcceleratedCompositing;
   settings.background_color := FOptions.BackgroundColor;
 end;
 
@@ -868,7 +894,6 @@ procedure TCustomChromium.ReCreateBrowser(const url: string);
 begin
   if (FBrowser <> nil) and (FBrowserId <> 0) then
   begin
-    FBrowser.Host.ParentWindowWillClose;
     SendMessage(FBrowser.Host.WindowHandle, WM_CLOSE, 0, 0);
     SendMessage(FBrowser.Host.WindowHandle, WM_DESTROY, 0, 0);
     FBrowserId := 0;
@@ -904,11 +929,13 @@ begin
   end;
 end;
 
-procedure TCustomChromium.ShowDevTools;
+procedure TCustomChromium.ShowDevTools(inspectElementAt: PCefPoint);
 var
   info: TCefWindowInfo;
   setting: TCefBrowserSettings;
 begin
+  if (FBrowser = nil) then Exit;
+
   FillChar(info, SizeOf(info), 0);
   info.style := WS_OVERLAPPEDWINDOW or WS_CLIPCHILDREN or WS_CLIPSIBLINGS or WS_VISIBLE;
   info.parent_window := FBrowser.Host.WindowHandle;
@@ -920,7 +947,7 @@ begin
 
   FillChar(setting, SizeOf(setting), 0);
   setting.size := SizeOf(setting);
-  FBrowser.Host.ShowDevTools(@info, FHandler, @setting);
+  FBrowser.Host.ShowDevTools(@info, TCefClientOwn.Create as ICefClient, @setting, inspectElementAt);
 end;
 
 procedure TCustomChromium.WndProc(var Message: TMessage);
@@ -1041,6 +1068,15 @@ begin
     FOnCancelGeolocationPermission(Self, browser, requestingUrl, requestId);
 end;
 
+function TCustomChromium.doOnCertificateError(certError: TCefErrorCode;
+  const requestUrl: ustring;
+  const callback: ICefAllowCertificateErrorCallback): Boolean;
+begin
+  Result := False;
+  if Assigned(FOnCertificateError) then
+    FOnCertificateError(Self, certError, requestUrl, callback, Result);
+end;
+
 function TCustomChromium.doOnConsoleMessage(const browser: ICefBrowser;
   const message, source: ustring; line: Integer): Boolean;
 begin
@@ -1066,7 +1102,8 @@ begin
 end;
 
 procedure TCustomChromium.doOnCursorChange(const browser: ICefBrowser;
-  cursor: TCefCursorHandle);
+  cursor: TCefCursorHandle; cursorType: TCefCursorType;
+  const customCursorInfo: PCefCursorInfo);
 begin
 
 end;
@@ -1111,14 +1148,6 @@ begin
   if Assigned(FOnGetAuthCredentials) then
     FOnGetAuthCredentials(Self, browser, frame, isProxy, host,
       port, realm, scheme, callback, Result);
-end;
-
-function TCustomChromium.doOnGetCookieManager(const browser: ICefBrowser;
-  const mainUrl: ustring): ICefCookieManager;
-begin
-  if Assigned(FOnGetCookieManager) then
-    FOnGetCookieManager(Self, browser, mainUrl, Result) else
-    Result := nil;
 end;
 
 function TCustomChromium.doOnGetResourceHandler(const browser: ICefBrowser;
@@ -1273,12 +1302,13 @@ begin
     FOnRenderProcessTerminated(Self, browser, status);
 end;
 
-procedure TCustomChromium.doOnRequestGeolocationPermission(
+function TCustomChromium.doOnRequestGeolocationPermission(
   const browser: ICefBrowser; const requestingUrl: ustring; requestId: Integer;
-  const callback: ICefGeolocationCallback);
+  const callback: ICefGeolocationCallback): Boolean;
 begin
+  Result := False;
   if Assigned(FOnRequestGeolocationPermission) then
-    FOnRequestGeolocationPermission(Self, browser, requestingUrl, requestId, callback);
+    FOnRequestGeolocationPermission(Self, browser, requestingUrl, requestId, callback, Result);
 end;
 
 procedure TCustomChromium.doOnResetDialogState(const browser: ICefBrowser);
@@ -1305,6 +1335,13 @@ begin
   Result := False;
   if Assigned(FOnSetFocus) then
     FOnSetFocus(Self, browser, source, Result);
+end;
+
+function TCustomChromium.doOnStartDragging(const browser: ICefBrowser;
+  const dragData: ICefDragData; allowedOps: TCefDragOperations; x,
+  y: Integer): Boolean;
+begin
+  Result := False;
 end;
 
 procedure TCustomChromium.doOnStatusMessage(const browser: ICefBrowser;
@@ -1334,6 +1371,12 @@ begin
   Result := False;
   if Assigned(FOnTooltip) then
     FOnTooltip(Self, browser, text, Result);
+end;
+
+procedure TCustomChromium.doOnUpdateDragCursor(const browser: ICefBrowser;
+  operation: TCefDragOperation);
+begin
+
 end;
 
 function TCustomChromium.doOnRunModal(const browser: ICefBrowser): Boolean;
@@ -1370,8 +1413,8 @@ begin
   if not (csDesigning in ComponentState) then
   begin
     FillChar(info, SizeOf(info), 0);
-    info.window_rendering_disabled := True;
-    info.transparent_painting := FTransparentPainting;
+    info.windowless_rendering_enabled := Ord(True);
+    info.transparent_painting_enabled := Ord(FTransparentPainting);
     FillChar(settings, SizeOf(TCefBrowserSettings), 0);
     settings.size := SizeOf(TCefBrowserSettings);
     GetSettings(settings);
@@ -1386,10 +1429,27 @@ end;
 
 destructor TCustomChromiumOSR.Destroy;
 begin
+  FOnGetRootScreenRect := nil;
+  FOnGetViewRect := nil;
+  FOnGetScreenPoint := nil;
+  FOnGetScreenInfo := nil;
+  FOnPopupShow := nil;
+  FOnPopupSize := nil;
+  FOnPaint := nil;
+  FOnCursorChange := nil;
+  FOnStartDragging := nil;
+  FOnUpdateDragCursor := nil;
+  FOnScrollOffsetChanged := nil;
+
   if FBrowser <> nil then
-    FBrowser.Host.ParentWindowWillClose;
+  begin
+    FBrowser.StopLoad;
+    FBrowser.Host.CloseBrowser(False);
+  end;
+
   if FHandler <> nil then
     (FHandler as ICefClientHandler).Disconnect;
+
   FHandler := nil;
   FBrowser := nil;
   FFontOptions.Free;
@@ -1405,6 +1465,8 @@ end;
 procedure TCustomChromiumOSR.GetSettings(var settings: TCefBrowserSettings);
 begin
   Assert(settings.size >= SizeOf(settings));
+  settings.windowless_frame_rate := FOptions.WindowlessFrameRate;
+
   settings.standard_font_family := CefString(FFontOptions.StandardFontFamily);
   settings.fixed_font_family := CefString(FFontOptions.FixedFontFamily);
   settings.serif_font_family := CefString(FFontOptions.SerifFontFamily);
@@ -1437,7 +1499,6 @@ begin
   settings.databases := FOptions.Databases;
   settings.application_cache := FOptions.ApplicationCache;
   settings.webgl := FOptions.Webgl;
-  settings.accelerated_compositing := FOptions.AcceleratedCompositing;
   settings.background_color := FOptions.BackgroundColor;
 end;
 
@@ -1464,7 +1525,6 @@ procedure TCustomChromiumOSR.ReCreateBrowser(const url: string);
 begin
   if (FBrowser <> nil) and (FBrowserId <> 0) then
   begin
-    FBrowser.Host.ParentWindowWillClose;
     SendMessage(FBrowser.Host.WindowHandle, WM_CLOSE, 0, 0);
     SendMessage(FBrowser.Host.WindowHandle, WM_DESTROY, 0, 0);
     FBrowserId := 0;
@@ -1570,6 +1630,15 @@ begin
     FOnCancelGeolocationPermission(Self, browser, requestingUrl, requestId);
 end;
 
+function TCustomChromiumOSR.doOnCertificateError(certError: TCefErrorCode;
+  const requestUrl: ustring;
+  const callback: ICefAllowCertificateErrorCallback): Boolean;
+begin
+  Result := False;
+  if Assigned(FOnCertificateError) then
+    FOnCertificateError(Self, certError, requestUrl, callback, Result);
+end;
+
 function TCustomChromiumOSR.doOnConsoleMessage(const browser: ICefBrowser;
   const message, source: ustring; line: Integer): Boolean;
 begin
@@ -1595,10 +1664,10 @@ begin
 end;
 
 procedure TCustomChromiumOSR.doOnCursorChange(const browser: ICefBrowser;
-  cursor: TCefCursorHandle);
+  cursor: TCefCursorHandle; cursorType: TCefCursorType; const customCursorInfo: PCefCursorInfo);
 begin
   if Assigned(FOnCursorChange) then
-    FOnCursorChange(Self, browser, cursor);
+    FOnCursorChange(Self, browser, cursor, cursorType, customCursorInfo);
 end;
 
 procedure TCustomChromiumOSR.doOnDialogClosed(const browser: ICefBrowser);
@@ -1641,14 +1710,6 @@ begin
   if Assigned(FOnGetAuthCredentials) then
     FOnGetAuthCredentials(Self, browser, frame, isProxy, host,
       port, realm, scheme, callback, Result);
-end;
-
-function TCustomChromiumOSR.doOnGetCookieManager(const browser: ICefBrowser;
-  const mainUrl: ustring): ICefCookieManager;
-begin
-  if Assigned(FOnGetCookieManager) then
-    FOnGetCookieManager(Self, browser, mainUrl, Result) else
-    Result := nil;
 end;
 
 function TCustomChromiumOSR.doOnGetResourceHandler(const browser: ICefBrowser;
@@ -1814,12 +1875,13 @@ begin
     FOnRenderProcessTerminated(Self, browser, status);
 end;
 
-procedure TCustomChromiumOSR.doOnRequestGeolocationPermission(
+function TCustomChromiumOSR.doOnRequestGeolocationPermission(
   const browser: ICefBrowser; const requestingUrl: ustring; requestId: Integer;
-  const callback: ICefGeolocationCallback);
+  const callback: ICefGeolocationCallback): Boolean;
 begin
+  Result := False;
   if Assigned(FOnRequestGeolocationPermission) then
-    FOnRequestGeolocationPermission(Self, browser, requestingUrl, requestId, callback);
+    FOnRequestGeolocationPermission(Self, browser, requestingUrl, requestId, callback, Result);
 end;
 
 procedure TCustomChromiumOSR.doOnResetDialogState(const browser: ICefBrowser);
@@ -1848,6 +1910,15 @@ begin
   Result := False;
   if Assigned(FOnSetFocus) then
     FOnSetFocus(Self, browser, source, Result);
+end;
+
+function TCustomChromiumOSR.doOnStartDragging(const browser: ICefBrowser;
+  const dragData: ICefDragData; allowedOps: TCefDragOperations; x,
+  y: Integer): Boolean;
+begin
+  Result := False;
+  if Assigned(FOnStartDragging) then
+    FOnStartDragging(Self, browser, dragData, allowedOps, x, y, Result);
 end;
 
 procedure TCustomChromiumOSR.doOnStatusMessage(const browser: ICefBrowser;
@@ -1879,6 +1950,13 @@ begin
     FOnTooltip(Self, browser, text, Result);
 end;
 
+procedure TCustomChromiumOSR.doOnUpdateDragCursor(const browser: ICefBrowser;
+  operation: TCefDragOperation);
+begin
+  if Assigned(FOnUpdateDragCursor) then
+    FOnUpdateDragCursor(Self, browser, operation);
+end;
+
 function TCustomChromiumOSR.doOnRunModal(const browser: ICefBrowser): Boolean;
 begin
   Result := False;
@@ -1886,5 +1964,92 @@ begin
     FOnRunModal(Self, browser, Result);
 end;
 
+
+{ TChromiumDevTools }
+
+procedure TChromiumDevTools.CloseDevTools(const browser: ICefBrowser);
+begin
+  if browser <> nil then
+  begin
+    windows.SetParent(GetWindow(Handle, GW_CHILD), 0);
+    browser.Host.CloseDevTools;
+  end;
+end;
+
+procedure TChromiumDevTools.Resize;
+var
+  rect: TRect;
+  hdwp: THandle;
+  hndl: THandle;
+begin
+  inherited;
+  hndl:= GetWindow(Handle, GW_CHILD);
+  if hndl = 0 then Exit;
+
+  rect:= GetClientRect;
+  hdwp := BeginDeferWindowPos(1);
+  try
+    hdwp := DeferWindowPos(hdwp, hndl, 0,
+      rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+      SWP_NOZORDER);
+  finally
+    EndDeferWindowPos(hdwp);
+  end;
+end;
+
+procedure TChromiumDevTools.ShowDevTools(const browser: ICefBrowser;
+  inspectElementAt: PCefPoint);
+var
+  info: TCefWindowInfo;
+  setting: TCefBrowserSettings;
+  rect: TRect;
+begin
+  if browser = nil then Exit;
+
+  FillChar(info, SizeOf(info), 0);
+
+  info.parent_window := Handle;
+  info.style := WS_CHILD or WS_VISIBLE or WS_CLIPCHILDREN or WS_CLIPSIBLINGS or WS_TABSTOP;
+  Rect := GetClientRect;
+  info.x := rect.left;
+  info.y := rect.top;
+  info.Width := rect.right - rect.left;
+  info.Height := rect.bottom - rect.top;
+  info.window_name := CefString('DevTools');
+
+  FillChar(setting, SizeOf(setting), 0);
+  setting.size := SizeOf(setting);
+
+  Browser.Host.ShowDevTools(@info, TCefClientOwn.Create as ICefClient, @setting, inspectElementAt);
+end;
+
+procedure TChromiumDevTools.WndProc(var Message: TMessage);
+var
+  hndl: THandle;
+begin
+  case Message.Msg of
+    WM_SETFOCUS:
+      begin
+        hndl := GetWindow(Handle, GW_CHILD);
+        if hndl <> 0 then
+          PostMessage(hndl, WM_SETFOCUS, Message.WParam, 0);
+        inherited WndProc(Message);
+      end;
+    WM_ERASEBKGND:
+      begin
+        hndl := GetWindow(Handle, GW_CHILD);
+        if (csDesigning in ComponentState) or (hndl = 0) then
+          inherited WndProc(Message);
+      end;
+    CM_WANTSPECIALKEY:
+      if not (TWMKey(Message).CharCode in [VK_LEFT .. VK_DOWN]) then
+        Message.Result := 1 else
+        inherited WndProc(Message);
+    WM_GETDLGCODE:
+      Message.Result := DLGC_WANTARROWS or DLGC_WANTCHARS;
+  else
+    inherited WndProc(Message);
+  end;
+end;
 
 end.

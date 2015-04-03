@@ -246,11 +246,7 @@ begin
           result := DefWindowProc(Wnd, message, wParam, lParam);
         end;
       WM_CLOSE:
-        begin
-          if brows <> nil then
-            brows.Host.ParentWindowWillClose;
           result := DefWindowProc(Wnd, message, wParam, lParam);
-        end
      else
        result := DefWindowProc(Wnd, message, wParam, lParam);
      end;
@@ -381,7 +377,7 @@ begin
   CefSingleProcess := False;
   if not CefLoadLibDefault then Exit;
 
-  CefRegisterSchemeHandlerFactory('local', '', False, TFileScheme);
+  CefRegisterSchemeHandlerFactory('local', '', TFileScheme);
 
   try
     wndClass.style         := CS_HREDRAW or CS_VREDRAW;

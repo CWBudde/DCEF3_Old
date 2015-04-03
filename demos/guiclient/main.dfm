@@ -18,17 +18,30 @@ object MainForm: TMainForm
   OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object Splitter: TSplitter
+    Left = 0
+    Top = 430
+    Width = 864
+    Height = 3
+    Cursor = crVSplit
+    Align = alBottom
+    Visible = False
+    ExplicitTop = 25
+    ExplicitWidth = 408
+  end
   object crm: TChromium
     Left = 0
     Top = 25
     Width = 864
-    Height = 608
+    Height = 405
     Align = alClient
     DefaultUrl = 'http://www.google.com'
     TabOrder = 0
     OnProcessMessageReceived = crmProcessMessageReceived
     OnLoadStart = crmLoadStart
     OnLoadEnd = crmLoadEnd
+    OnBeforeContextMenu = crmBeforeContextMenu
+    OnContextMenuCommand = crmContextMenuCommand
     OnAddressChange = crmAddressChange
     OnTitleChange = crmTitleChange
     OnStatusMessage = crmStatusMessage
@@ -36,6 +49,15 @@ object MainForm: TMainForm
     OnDownloadUpdated = crmDownloadUpdated
     OnBeforePopup = crmBeforePopup
     OnBeforeResourceLoad = crmBeforeResourceLoad
+    OnCertificateError = crmCertificateError
+  end
+  object DevTools: TChromiumDevTools
+    Left = 0
+    Top = 433
+    Width = 864
+    Height = 200
+    Align = alBottom
+    Visible = False
   end
   object StatusBar: TStatusBar
     Left = 0
@@ -45,7 +67,7 @@ object MainForm: TMainForm
     Panels = <>
     SimplePanel = True
   end
-  object PanelControl: TPanel
+  object Panel1: TPanel
     Left = 0
     Top = 0
     Width = 864
@@ -55,35 +77,35 @@ object MainForm: TMainForm
     DesignSize = (
       864
       25)
-    object SpeedButtonBack: TSpeedButton
+    object SpeedButton1: TSpeedButton
       Left = 0
       Top = 0
       Width = 23
       Height = 22
       Action = actPrev
     end
-    object SpeedButtonNext: TSpeedButton
+    object SpeedButton2: TSpeedButton
       Left = 24
       Top = 0
       Width = 23
       Height = 22
       Action = actNext
     end
-    object SpeedButtonHome: TSpeedButton
+    object SpeedButton3: TSpeedButton
       Left = 48
       Top = 0
       Width = 23
       Height = 22
       Action = actHome
     end
-    object SpeedButtonReload: TSpeedButton
+    object SpeedButton4: TSpeedButton
       Left = 72
       Top = 0
       Width = 23
       Height = 22
       Action = actReload
     end
-    object SpeedButtonLoadUrl: TSpeedButton
+    object SpeedButton5: TSpeedButton
       Left = 841
       Top = 0
       Width = 23
@@ -160,6 +182,7 @@ object MainForm: TMainForm
       OnExecute = actDomExecute
     end
     object actDevTool: TAction
+      AutoCheck = True
       Caption = 'Show DevTools'
       OnExecute = actDevToolExecute
     end
@@ -175,10 +198,6 @@ object MainForm: TMainForm
       Caption = 'File Scheme'
       OnExecute = actFileSchemeExecute
     end
-    object actCloseDevTools: TAction
-      Caption = 'Close Dev Tools'
-      OnExecute = actCloseDevToolsExecute
-    end
     object actPrint: TAction
       Caption = 'Print'
       OnExecute = actPrintExecute
@@ -187,56 +206,55 @@ object MainForm: TMainForm
   object MainMenu: TMainMenu
     Left = 624
     Top = 56
-    object MenuItemFile: TMenuItem
+    object File1: TMenuItem
       Caption = '&File'
-      object MenuItemPrint: TMenuItem
+      object Print1: TMenuItem
         Action = actPrint
       end
-      object MenuItemExit: TMenuItem
+      object Exit1: TMenuItem
         Caption = 'Exit'
         ShortCut = 16465
-        OnClick = MenuItemExitClick
+        OnClick = Exit1Click
       end
     end
-    object MenuItemTest: TMenuItem
+    object est1: TMenuItem
       Caption = '&Test'
-      object MenuItemGetSource: TMenuItem
+      object mGetsource: TMenuItem
         Action = actGetSource
       end
-      object MenuItemGetText: TMenuItem
+      object mGetText: TMenuItem
         Action = actGetText
       end
-      object MenuItemExecuteJavaScript: TMenuItem
+      object ExecuteJavaScript1: TMenuItem
         Action = actExecuteJS
       end
-      object MenuItemZoomIn: TMenuItem
+      object Zoomin1: TMenuItem
         Action = actZoomIn
       end
-      object MenuItemZoomOut: TMenuItem
+      object Zoomout1: TMenuItem
         Action = actZoomOut
       end
-      object MenuItemZoomReset: TMenuItem
+      object Zoomreset1: TMenuItem
         Action = actZoomReset
       end
-      object MenuItemFileScheme: TMenuItem
+      object actFileScheme1: TMenuItem
         Action = actFileScheme
       end
-      object MenuItemVisitDOM: TMenuItem
+      object VisitDOM1: TMenuItem
         Action = actDom
       end
-      object MenuItemDevelopperTools: TMenuItem
+      object DevelopperTools1: TMenuItem
         Action = actDevTool
-      end
-      object MenuItemCloseDevTools: TMenuItem
-        Action = actCloseDevTools
+        AutoCheck = True
+        ShortCut = 123
       end
     end
-    object MenuItemHelp: TMenuItem
+    object Help1: TMenuItem
       Caption = 'Help'
-      object MenuItemDocumentation: TMenuItem
+      object Documentation1: TMenuItem
         Action = actDoc
       end
-      object MenuItemGoogleGroup: TMenuItem
+      object Googlegroup1: TMenuItem
         Action = actGroup
       end
     end
