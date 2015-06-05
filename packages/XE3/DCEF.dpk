@@ -1,6 +1,5 @@
-package DCEF_D7;
+package DCEF;
 
-{$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
@@ -25,16 +24,20 @@ package DCEF_D7;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$IMPLICITBUILD OFF}
+{$DESCRIPTION 'Delphi Chromium Embedded 3 Framework'}
+{$LIBSUFFIX 'XE3'}
+{$IMPLICITBUILD ON}
 
 requires
   rtl,
-  vcl;
+  vcl,
+  fmx;
 
 contains
-  cefgui in '..\src\cefgui.pas',
-  ceflib in '..\src\ceflib.pas',
-  cefvcl in '..\src\cefvcl.pas',
-  cefreg in 'cefreg.pas';
+  cefvcl in '..\..\src\cefvcl.pas',
+  ceflib in '..\..\src\ceflib.pas',
+  cefgui in '..\..\src\cefgui.pas',
+  ceffmx in '..\..\src\ceffmx.pas',
+  cefreg in '..\cefreg.pas';
 
 end.
