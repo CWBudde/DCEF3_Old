@@ -1,11 +1,11 @@
-package DCEF_XE7;
+package DCEF_XE5;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO OFF}
+{$DEBUGINFO ON}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -33,9 +33,9 @@ requires
   vcl;
 
 contains
-  cefreg in 'cefreg.pas',
-  cefgui in '..\src\cefgui.pas',
-  ceflib in '..\src\ceflib.pas',
-  cefvcl in '..\src\cefvcl.pas';
+  cefreg in '..\cefreg.pas',
+  cefgui in '..\..\src\cefgui.pas',
+  ceflib in '..\..\src\ceflib.pas',
+  cefvcl in '..\..\src\cefvcl.pas';
 
 end.

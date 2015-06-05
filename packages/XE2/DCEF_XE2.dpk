@@ -1,4 +1,4 @@
-package DCEF_XE3;
+package DCEF_XE2;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,7 +25,7 @@ package DCEF_XE3;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Chromium Embedded Framework 3'}
+{$DESCRIPTION 'DCEF3 Package'}
 {$IMPLICITBUILD ON}
 
 requires
@@ -34,9 +34,10 @@ requires
   fmx;
 
 contains
-  cefreg in 'cefreg.pas',
-  cefgui in '..\src\cefgui.pas',
-  ceflib in '..\src\ceflib.pas',
-  cefvcl in '..\src\cefvcl.pas';
+  cefreg in '..\cefreg.pas',
+  cefvcl in '..\..\src\cefvcl.pas',
+  ceflib in '..\..\src\ceflib.pas',
+  cefgui in '..\..\src\cefgui.pas',
+  ceffmx in '..\..\src\ceffmx.pas';
 
 end.

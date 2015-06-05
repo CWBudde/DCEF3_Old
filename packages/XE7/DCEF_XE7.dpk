@@ -1,11 +1,11 @@
-package DCEF_D2010;
+package DCEF_XE7;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 8}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
-{$DEBUGINFO ON}
+{$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
@@ -25,6 +25,7 @@ package DCEF_D2010;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Chromium Embedded Framework 3'}
 {$IMPLICITBUILD ON}
 
 requires
@@ -32,9 +33,9 @@ requires
   vcl;
 
 contains
-  cefvcl in '..\src\cefvcl.pas',
-  ceflib in '..\src\ceflib.pas',
-  cefgui in '..\src\cefgui.pas',
-  cefreg in 'cefreg.pas';
+  cefreg in '..\cefreg.pas',
+  cefgui in '..\..\src\cefgui.pas',
+  ceflib in '..\..\src\ceflib.pas',
+  cefvcl in '..\..\src\cefvcl.pas';
 
 end.
