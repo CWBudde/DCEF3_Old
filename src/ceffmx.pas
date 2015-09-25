@@ -1104,9 +1104,14 @@ procedure TCustomChromiumFMX.MouseWheel(Shift: TShiftState; WheelDelta: Integer;
   var Handled: Boolean);
 var
   event: TCefMouseEvent;
+  MouseService: IFMXMouseService;
 begin
   if Browser <> nil then
+  {$IFDEF DELPHI22_UP}
+  with AbsoluteToLocal(MouseService.GetMousePos).Round do
+  {$ELSE}
   with AbsoluteToLocal(Platform.GetMousePos).Round do
+  {$ENDIF}
   begin
     event.x := X;
     event.y := Y;
